@@ -37,14 +37,14 @@ div.table p.dealer {
 }
 
 div.table p.player {
-    bottom: 30%;
-    left: 7%;
+    bottom: 0.5%;
+    left: 35%;
     z-index: 3;
 }
 
 div.table p.agent {
-    bottom: 30%;
-    right: 7%;
+    bottom: 0.5%;
+    right: 35%;
     z-index: 3;
 }
 
@@ -70,14 +70,14 @@ div.table div.dealer {
 
 /* Player */
 div.table div.player {
-    bottom: 7%;
+    bottom: 8%;
     left: 30%;
     z-index: 2;
 }
 
 /* Agent */
 div.table div.agent {
-    bottom: 5%;
+    bottom: 8%;
     left: 70%;
     z-index: 2;
 }
