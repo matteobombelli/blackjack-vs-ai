@@ -1,0 +1,62 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Blackjack vs. AI</title>
+    <link rel="stylesheet" href="styles.css">
+    <script src="script.js"></script>
+</head>
+<body>
+    <a class="info-button" href="info.html">?</a>
+    <div class="table">
+
+        <p class="dealer">Dealer</p>
+        <p class="player">Player</p>
+        <p class="agent">Agent</p>
+
+        <div class="dealer">
+            <img class="card" alt="">
+            <img class="card" alt="">
+        </div>
+
+        <div class="player">
+            <button id="button_lower_bet">
+                <p>-0</p>
+            </button>
+
+            <button id="button_raise_bet">
+                <p>+0</p>
+            </button>
+
+            <p class="chips" id="playerbet">0</p>
+            <br>
+
+            <img class="card" alt="">
+            <img class="card" alt="">
+
+            <button id="button_hit">
+                <p>Hit</p>
+            </button>
+
+            <button id="button_stay">
+                <p>Stay</p>
+            </button>
+
+            <img class="chips" src="images/chips.png" alt="">
+            <p class="chips" id="playerchips">0</p>
+        </div>
+
+        <div class="agent">
+            <p class="chips" id="agentbet">0</p>
+            <br>
+
+            <img class="card" alt="">
+            <img class="card" alt="">
+
+            <img class="chips" src="images/chips.png" alt="">
+            <p class="chips" id="agentchips">0</p>
+        </div>
+        
+    </div>
+</body>
+</html>
