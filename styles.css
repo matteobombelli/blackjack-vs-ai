@@ -5,15 +5,17 @@ body {
 
 div.table {
     background-color: darkgreen;
-    position: absolute;
-    margin-left: 5vw;
-    margin-right: 5vw;
-    margin-top: 5vh;
-    margin-bottom: 5vh;
+
+    margin-left: 2.5vw;
+    margin-right: 2.5vw;
+    margin-top: 1vh;
+    margin-bottom: 4vh;
     border: 4px solid black;
     border-radius: 25%;
-    width: 90vw;
-    height: 90vh;
+
+    position: absolute;
+    width: 95vw;
+    height: 95vh;
 }
 
 /* Dealer, Player, Agent */
@@ -21,99 +23,128 @@ div.table {
 div.table p.dealer,
 div.table p.player,
 div.table p.agent {
-    background-color: darkgreen;
+    background-color: inherit;
     color: blanchedalmond;
-    font-size: xx-large;
+    font-size: 4vh;
     font-weight: bolder;
+
+    margin: 4px;
+    padding: 0px;
+
     position: absolute;
-    margin: 0;
-}
-
-div.table p.dealer {
-    top: 0%;
-    left: 50%;
     transform: translateX(-50%); /* center */
-    z-index: 2;
-}
-
-div.table p.player {
-    bottom: 0.5%;
-    left: 35%;
-    z-index: 3;
-}
-
-div.table p.agent {
-    bottom: 0.5%;
-    right: 28%;
-    z-index: 3;
 }
 
 /* Divs */
 div.table div.dealer,
 div.player,
 div.agent {
-    background-color: darkgreen;
-    position: absolute;
+    background-color: inherit;
     display: inline-block;
     text-align: center;
+
+    margin: 4px;
+
+    position: absolute;
     transform: translateX(-50%); /* center */
-    width: 35%;
-    height: 50%;
+    width: 30%;
+    height: 40%;
 }
 
+/* Positioning */
 /* Dealer */
+div.table p.dealer {
+    top: 2%;
+    left: 50%;
+    z-index: 0;
+}
+
 div.table div.dealer {
-    top: 5%;
+    top: 10%;
     left: 50%;
     z-index: 1;
 }
 
 /* Player */
+div.table p.player {
+    bottom: 2%;
+    left: 35%;
+    z-index: 0;
+}
+
 div.table div.player {
-    bottom: 8%;
-    left: 30%;
+    bottom: 15%;
+    left: 35%;
     z-index: 2;
 }
 
 /* Agent */
+div.table p.agent {
+    bottom: 2%;
+    left: 80%;
+    z-index: 0;
+}
+
 div.table div.agent {
-    bottom: 8%;
-    left: 75%;
+    bottom: 15%;
+    left: 80%;
     z-index: 2;
 }
 
 /* Card */
 img.card {
-    background-color: red;
     margin-left: 5%;
     margin-right: 5%;
     margin-top: 1%;
+
     width: 35%;
     height: 70%;
 }
 
 /* Chips */
 img.chips {
-    max-height: 10%;
     display: inline-block;
+
     margin: 1%;
     margin-bottom: 0%;
+
+    max-height: 10%;
 }
 
 p.chips {
     background-color: blanchedalmond;
     color: black;
     font-weight: bolder;
-    font-size: xx-large;
+    font-size: 4vh;
     text-align: right;
+    display: inline-block;
+
     border: 4px solid maroon;
-    padding: 0%;
-    padding-right: 2%;
-    margin: 1%;
-    margin-bottom: 0%;
+    padding-bottom: 12px;
+    padding-right: 8px;
+    margin: 4px;
+    margin-bottom: 0px;
+
     width: 20%;
     height: 10%;
+}
+
+/* Winner/Loser/Bust */
+p.bet-status {
+    background-color: inherit;
+    color: blanchedalmond;
+    font-weight: bolder;
+    font-size: 4vh;
+    text-align: right;
     display: inline-block;
+
+    padding-bottom: 12px;
+    padding-right: 8px;
+    margin: 4px;
+    margin-bottom: 0px;
+
+    width: 5%;
+    height: 10%;
 }
 
 /* Info Button */
@@ -121,14 +152,14 @@ a.info-button {
     position: fixed;
     top: 1%;
     left: 1%;
-    width: 80px;
-    height: 80px;
+    width: 10vh;
+    height: 10vh;
 
     background-color: maroon;
     color: blanchedalmond;
     text-align: center;
     text-decoration: none;
-    font-size: 3.5em;
+    font-size: 7.5vh;
 
     border: 4px solid black;
     border-radius: 50%;
@@ -142,12 +173,14 @@ a.info-button:hover {
 /* Player Controls */
 div.player button {
     background-color: maroon;
-    border: 4px solid black;
     text-align: center;
-    margin: 1%;
-    margin-bottom: 0%;
+
+    border: 4px solid black;
+    margin: 4px;
+    margin-bottom: 0px;
+
     width: 20%;
-    height: 15%;
+    height: 17%;
 }
 
 div.player button:hover {
@@ -157,7 +190,66 @@ div.player button:hover {
 div.player button p {
     color: blanchedalmond;
     font-weight: bolder;
-    font-size: xx-large;
+    font-size: 4vh;
     text-align: center;
-    margin: 2%;
+    
+    margin: 0px;
+}
+
+/* Game over */
+div.gameover {
+    visibility: hidden; /* hidden on start*/
+
+    background-color: maroon;
+    text-align: center;
+
+    margin-left: 10vw;
+    margin-right: 10vw;
+    margin-top: 4vh;
+    margin-bottom: 16vh;
+    border: 8px solid blanchedalmond;
+    border-radius: 5%;
+
+    position: absolute;
+    width: 80vw;
+    height: 80vh;
+    z-index: 5;
+}
+
+div.gameover h1, div.gameover p {
+    color: blanchedalmond;
+    text-align: center;
+    font-size: 8vh;
+    font-weight: bold;
+
+    margin: 8vh;
+}
+
+div.gameover p {
+    font-size: 4vh;
+}
+
+div.gameover button {
+    background-color: blanchedalmond;
+    text-align: center;
+
+    border: 4px solid black;
+    border-radius: 10%;;
+    margin: 4px;
+
+    width: 20%;
+    height: 20%;
+}
+
+div.gameover button:hover {
+    opacity: 50%;
+}
+
+div.gameover button p {
+    color: black;
+    font-weight: bolder;
+    font-size: 4vh;
+    text-align: center;
+    
+    margin: 0px;
 }

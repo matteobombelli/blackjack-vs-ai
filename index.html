@@ -21,14 +21,15 @@
 
         <div class="player">
             <button id="button_lower_bet">
-                <p>-0</p>
+                <p>-</p>
             </button>
 
             <button id="button_raise_bet">
-                <p>+0</p>
+                <p>+</p>
             </button>
 
             <p class="chips" id="playerbet">0</p>
+            <p class="bet-status" id="playerbet_status">-</p>
             <br>
 
             <img class="card" alt="">
@@ -48,6 +49,7 @@
 
         <div class="agent">
             <p class="chips" id="agentbet">0</p>
+            <p class="bet-status" id="agentbet_status">-</p>
             <br>
 
             <img class="card" alt="">
@@ -57,6 +59,12 @@
             <p class="chips" id="agentchips">0</p>
         </div>
         
+    </div>
+
+    <div class="gameover">
+        <h1>Game Over</h1>
+        <p id="gameover_message">You lost</p>
+        <button id="reset"><p>Play Again</p></button>
     </div>
 </body>
 </html>
