@@ -44,7 +44,7 @@ div.table p.player {
 
 div.table p.agent {
     bottom: 0.5%;
-    right: 35%;
+    right: 28%;
     z-index: 3;
 }
 
@@ -78,7 +78,7 @@ div.table div.player {
 /* Agent */
 div.table div.agent {
     bottom: 8%;
-    left: 70%;
+    left: 75%;
     z-index: 2;
 }
 
