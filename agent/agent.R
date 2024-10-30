@@ -82,14 +82,14 @@ hit <- function(value, ace) {
 # state[2] = player
 # state[3] = ace
 #
-# Returns 5 on a player win
-# Returns 2 on a tie
-# Returns 1 on a dealer win
+# Returns 1 on a player win
+# Returns 0 on a tie
+# Returns -1 on a dealer win
 ########################
 evaluate_state <- function(state) {
   # If player is bust, dealer wins
   if (state[2] > 21) {
-    return(1)
+    return(-1)
   }
   
   # Check for dealer ace
@@ -112,11 +112,11 @@ evaluate_state <- function(state) {
   # Player is not bust at this point
   # Calculate winning state by hand comparison
   if (state[2] > dealer[1] || dealer[1] > 21) {
-    return(5) # Player > dealer or dealer bust, player win
+    return(1) # Player > dealer or dealer bust, player win
   } else if (state[2] < dealer[1]) {
-    return(1) # Player < dealer, dealer win
+    return(-1) # Player < dealer, dealer win
   } else {
-    return(2) # Player == dealer, tie
+    return(0) # Player == dealer, tie
   }
 }
 
@@ -202,9 +202,9 @@ evaluate_policy <- function(policy, n) {
     
     # Evaluate the state and tally wins/ties/losses
     state_value = evaluate_state(state)
-    if (state_value == 5) {
+    if (state_value == 1) {
       wins = wins + 1
-    } else if (state_value == 2) {
+    } else if (state_value == 0) {
       ties = ties + 1
     } else {
       losses = losses + 1
@@ -334,17 +334,15 @@ monte_carlo_training <- function(policy, policy_visits, n, m, q, min_variation,
 policy <- array(0, dim = c(11, 32, 2, 2))
 policy_visits <- array(0, dim = c(11, 32, 2, 2))
 
-# Initialize policy to 1
-policy[,,,] <- 1
+# Initialize policy to 0
+policy[,,,] <- 0
 
 # Initialize policy_visits to 0
 policy_visits[,,,] <- 0
 
-print(evaluate_policy(policy, 10000))
-
 # Train
 policy <- monte_carlo_training(policy, policy_visits, 
-                               100000, 1000000, 5, 0.005, 1, 0.2, 0.01, TRUE)
+                               100000, 1000000, 5, 0.005, 0.8, 1, 1, TRUE)
 
 ###########################
 # Plot results
@@ -405,3 +403,5 @@ plot_without_ace <- ggplot(policy_df[policy_df$Ace == 0, ], aes(x = Dealer, y = 
 # Display the plots
 print(plot_with_ace)
 print(plot_without_ace)
+
+print(evaluate_policy(policy, 10000))
