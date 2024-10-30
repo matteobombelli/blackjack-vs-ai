@@ -13,7 +13,8 @@
 # Get a random card
 ######################
 random_card <- function() {
-  return(sample(2:11, 1))
+  # Higher likelihood of 10
+  return(sample(c(2, 3, 4, 5, 6, 7, 8, 9, 10, 10, 10, 10, 11), 1))
 }
 
 ########################
@@ -60,13 +61,13 @@ hit <- function(value, ace) {
   
   # Check if card is ace
   if (card == 11) {
-    ace =  ace + 1
+    ace = ace + 1
   }
   
   # Check for bust with ace
   if (value + card > 21 && ace > 0) {
     value = value + card - 10
-    ace =  ace - 1
+    ace = ace - 1
   } else {
     value = value + card
   }
@@ -81,14 +82,14 @@ hit <- function(value, ace) {
 # state[2] = player
 # state[3] = ace
 #
-# Returns 0 on a tie
-# Returns 1 on a player win
-# Returns -1 on a dealer win
+# Returns 5 on a player win
+# Returns 2 on a tie
+# Returns 1 on a dealer win
 ########################
 evaluate_state <- function(state) {
   # If player is bust, dealer wins
   if (state[2] > 21) {
-    return(-1)
+    return(1)
   }
   
   # Check for dealer ace
@@ -111,11 +112,11 @@ evaluate_state <- function(state) {
   # Player is not bust at this point
   # Calculate winning state by hand comparison
   if (state[2] > dealer[1] || dealer[1] > 21) {
-    return(1) # Player > dealer or dealer bust, player win
+    return(5) # Player > dealer or dealer bust, player win
   } else if (state[2] < dealer[1]) {
-    return(-1) # Player < dealer, dealer win
+    return(1) # Player < dealer, dealer win
   } else {
-    return(0) # Player == dealer, tie
+    return(2) # Player == dealer, tie
   }
 }
 
@@ -159,13 +160,19 @@ Q <- function(state_actions, devalue) {
 #
 # Assigns the reward to the state and action
 #################
-assign_reward <- function(policy, state_action, reward) {
+assign_reward <- function(policy, policy_visits, state_action, reward) {
   # Convert the state_action row to numeric
   indices = as.numeric(state_action)
   
+  # Increment visits count
+  policy_visits[indices[1], indices[2], indices[3] + 1, indices[4]] =
+    policy_visits[indices[1], indices[2], indices[3] + 1, indices[4]] + 1
+  
+  # Calculate new mean
+  new_mean = (policy[indices[1], indices[2], indices[3] + 1, indices[4]] + reward) / policy_visits[indices[1], indices[2], indices[3] + 1, indices[4]]
+  
   # Assign the reward to the appropriate position in the policy
-  policy[indices[1], indices[2], indices[3] + 1, indices[4]] = 
-    reward + policy[indices[1], indices[2], indices[3] + 1, indices[4]]
+  policy[indices[1], indices[2], indices[3] + 1, indices[4]] = new_mean
   
   return(policy)
 }
@@ -184,22 +191,20 @@ evaluate_policy <- function(policy, n) {
     state = random_state()
     
     # Perform actions on the state until player chooses to stay
-    hit_total_reward = policy[state[1], state[2], state[3] + 1, 2]
-    stay_total_reward = policy[state[1], state[2], state[3] + 1, 1]
+    action = which.max(policy[state[1], state[2], state[3] + 1, ])
     
-    while (hit_total_reward > stay_total_reward && state[2] < 21) {
+    while (action == 2 && state[2] < 22) { # action 2 signifies hit
       hit_value = hit(state[2], state[3])
       state[2] = hit_value[1]
       state[3] = hit_value[2]
-      hit_total_reward = policy[state[1], state[2], state[3] + 1, 2]
-      stay_total_reward = policy[state[1], state[2], state[3] + 1, 1]
+      action = which.max(policy[state[1], state[2], state[3] + 1, ])
     }
     
     # Evaluate the state and tally wins/ties/losses
     state_value = evaluate_state(state)
-    if (state_value == 1) {
+    if (state_value == 5) {
       wins = wins + 1
-    } else if (state_value == 0) {
+    } else if (state_value == 2) {
       ties = ties + 1
     } else {
       losses = losses + 1
@@ -216,22 +221,31 @@ evaluate_policy <- function(policy, n) {
 ######################
 # Train policy
 #
-# n is the maximum number of sample states and the number of testing samples
-# m is the number of sample states between each accuracy test
+# n is the maximum number of sample states
+#
+# m is the number of sample states between each accuracy test 
+# and the number of testing samples
+#
 # q is the number of accuracy tests that see no growth before we end the
 # loop prematurely
 #
-# Devalue is the coefficient to lesser reward previous actions
+# min_variation is the minimum variance ratio needed to keep the iterating
 #
-# min_improvement is the minimum variance ratio needed to keep the iterating
+# devalue is the coefficient to lesser reward previous actions
+#
+# epsilon_start is the probability of exploring vs exploiting the created policy
+#
+# epsilon_min is the probability of exploring vs exploiting the created policy
 #
 # print = TRUE will print status messages every test
 ######################
-monte_carlo_training <- function(policy, n, m, q, min_variation, devalue, print = FALSE) {
-  improving = TRUE
+monte_carlo_training <- function(policy, policy_visits, n, m, q, min_variation, 
+                                 devalue, epsilon_start, epsilon_min, print = FALSE) {
   i = 1
   q = 5
   accuracy = as.list(rep(0, q))
+  epsilon_decay = max(epsilon_min, (epsilon_start - epsilon_min) / n)
+  improving = TRUE
   j = 0
   while (j < n && improving ==TRUE) {
     # Get a random state
@@ -239,27 +253,44 @@ monte_carlo_training <- function(policy, n, m, q, min_variation, devalue, print 
     
     # Perform random actions on the state until the agent stays or hits 21
     # or busts
+    
+    # Reduce epsilon over time
+    epsilon = epsilon_start - j * epsilon_decay
+    
+    # Randomly explore or exploit based on epsilon constant
+    if (runif(1) > epsilon) {
+      action = which.max(policy[state[1], state[2], state[3] + 1, ])
+    } else {
+      action = sample(1:2, 1)
+    }
+    
     state_actions = data.frame()
-    action = sample(1:2, 1)
     state_actions = rbind(state_actions, c(state, action))
     while (state[2] <= 21 && action == 2) {
       
       hit_value = hit(state[2], state[3])
       state[2] = hit_value[1]
       state[3] = hit_value[2]
-      action = sample(1:2, 1)
+      
+      # Randomly explore or exploit based on epsilon constant
+      if (runif(1) > epsilon) {
+        action = which.max(policy[state[1], state[2], state[3] + 1, ])
+      } else {
+        action = sample(1:2, 1)
+      }
+      
       state_actions = rbind(state_actions, c(state, action))
     }
     
     # Calculate and apply rewards to policy
     rewards = Q(state_actions, devalue)
     for (k in seq(1:nrow(state_actions))) {
-      policy = assign_reward(policy, state_actions[k, ], rewards[k])
+      policy = assign_reward(policy, policy_visits, state_actions[k, ], rewards[k])
     }
     
     # Test the accuracy of the policy
     if (j %% m == 0 && j > 0) {
-      accuracy[[i]] = evaluate_policy(policy, n)
+      accuracy[[i]] = evaluate_policy(policy, m)
       
       # Get first column (win %)
       accuracy_matrix =  do.call(rbind, accuracy)
@@ -301,11 +332,19 @@ monte_carlo_training <- function(policy, n, m, q, min_variation, devalue, print 
 ###################
 # Initialize a 4D array policy with dimensions 11 x 32 x 2 x 2
 policy <- array(0, dim = c(11, 32, 2, 2))
+policy_visits <- array(0, dim = c(11, 32, 2, 2))
 
-# max 100000 samples (also test samples), 5000 per iteration, 10 iteration history,
-# minimum variance of 1% in history, devalue rewards to 90% per step,
-# print test results at each iteration
-policy <- monte_carlo_training(policy, 100000, 5000, 10, 0.01, 0.3, TRUE)
+# Initialize policy to 1
+policy[,,,] <- 1
+
+# Initialize policy_visits to 0
+policy_visits[,,,] <- 0
+
+print(evaluate_policy(policy, 10000))
+
+# Train
+policy <- monte_carlo_training(policy, policy_visits, 
+                               100000, 1000000, 5, 0.005, 1, 0.2, 0.01, TRUE)
 
 ###########################
 # Plot results
