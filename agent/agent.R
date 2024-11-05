@@ -1,4 +1,4 @@
-#########################################################
+###############################################################################
 #
 # Agent is a Monte-Carlo reinforcement-trained statistical model
 # 
@@ -8,21 +8,23 @@
 #
 # Value Function: State-action pair, Q(s, a)
 #
-#########################################################
-######################
+###############################################################################
+
+##########################
+# BLACKJACK FUNCTIONALITY
+#########################
+
 # Get a random card
-######################
 random_card <- function() {
   # Higher likelihood of 10 for J, Q, K
   return(sample(c(2, 3, 4, 5, 6, 7, 8, 9, 10, 10, 10, 10, 11), 1))
 }
 
-######################
 # Add a card to a hand
+# Accounts for soft hands with aces
 #
 # State[2] = player value
-# State[3] = ace
-######################
+# State[3] = ace (1 = NO, 2 = YES)
 hit <- function(value, ace) {
   value =  as.numeric(value)
   ace =  as.numeric(ace)
@@ -34,7 +36,7 @@ hit <- function(value, ace) {
   }
   
   # Check for bust with ace
-  if (value + card > 21 && ace > 0) {
+  if (value + card > 21 && ace > 1) {
     value = value + card - 10
     ace = ace - 1
   } else {
@@ -44,41 +46,39 @@ hit <- function(value, ace) {
   return(c(value, ace))
 }
 
-########################
 # Get a random state
 #
 # state[1] = dealer
 # state[2] = player
-# state[3] = ace
-########################
+# state[3] = ace (1 = NO, 2 = YES)
 random_state <- function() {
   
   # Dealer simply gets one card
-  dealer = hit(0, 0)[1]
+  dealer = hit(0, 1)[1]
   
   # Player gets 2 cards, track ace
-  player_hand = hit(0, 0)
+  player_hand = hit(0, 1)
   player_hand = hit(player_hand[1], player_hand[2])
   
   return(c(dealer, player_hand[1], player_hand[2]))
 }
 
-########################
 # Finalize state
-########################
-finalize_state <- function(state) {
+#
+# Follows dealer logic (hit until >= 17) to calculate the final
+# dealer hand
+finalize_dealer <- function(state) {
   # Check for dealer ace
   dealer = state[1]
   if (dealer == 11) {
-    dealer_ace = 1
+    dealer_ace = 2
   } else {
-    dealer_ace = 0
+    dealer_ace = 1
   }
   
-  # Hit the dealer at least once to make a full hand
   # dealer_hand[1] = dealer value
   # dealer_hand[2] = dealer ace
-  dealer_hand = hit(dealer, dealer_ace)
+  dealer_hand = c(dealer, dealer_ace)
   
   # Dealer hits until 17 or over
   while (dealer_hand[1] < 17) {
@@ -86,12 +86,17 @@ finalize_state <- function(state) {
   }
   
   state[1] = dealer_hand[1]
-  
   return(state)
 }
 
-########################
-# Evaluate state
+
+##########################
+# AGENT FUNCTIONS
+#########################
+
+# Reward function
+#
+# Returns a reward based on the state
 #
 # state[1] = dealer
 # state[2] = player
@@ -100,8 +105,10 @@ finalize_state <- function(state) {
 # Returns 1 on a player win
 # Returns 0 on a tie
 # Returns -1 on a player loss
-########################
-evaluate_state <- function(state) {
+R <- function(s) {
+  # Get the rest of dealer cards
+  state = finalize_dealer(s)
+  
   # If player is bust, dealer wins
   dealer = state[1]
   player = state[2]
@@ -128,290 +135,310 @@ evaluate_state <- function(state) {
   
   # Else, player == dealer = tie
   return(0)
-
+  
 }
 
-########################
-# Calculate rewards
-########################
-# Function to create progressively devalued rewards
-create_rewards <- function(reward, gamma, len) {
-  # Create a sequence from 0 to (len - 1)
-  exponent =  seq(0, len - 1)
+# Returns function
+#
+# Map is a 4D array of state-actions
+#
+# Adds a constant 'add' to the s, a on the map
+#
+# Returns the updated map and the new total return for the s, a
+Returns <- function(s, a, map, add = 0) {
   
-  # Calculate progressively devalued rewards using vectorized operations
-  rewards =  reward * (gamma ^ exponent)
+  map[s[1], s[2], s[3], a] = map[s[1], s[2], s[3], a] + add
+  return = map[s[1], s[2], s[3], a]
   
-  # Reverse the rewards list
-  rewards =  rev(rewards)
-  
-  return(rewards)
+  return(list(map = map, return = return))
 }
 
-#################
+# Visits function
+#
+# Map is a 4D array of state-actions
+#
+# if visited == TRUE, adds 1 to the s, a
+#
+# Returns the updated map and the new total visits for the s, a
+N <- function(s, a, map, visited = FALSE) {
+  
+  add = ifelse(visited, 1, 0)
+  map[s[1], s[2], s[3], a] = map[s[1], s[2], s[3], a] + add
+  visits = map[s[1], s[2], s[3], a]
+  
+  return(list(map = map, visit = visits))
+}
+
 # Value function
-#################
-Q <- function(state_actions, gamma) {
-  # Calculate reward via final state
-  len = nrow(state_actions)
-  reward = evaluate_state(finalize_state(state_actions[len, c(1:3)]))
-  
-  # Return progressively devalued list of rewards
-  # Correlates to indices on state_actions
-  rewards = create_rewards(reward, gamma, len)
-  
-  return(rewards)
-}
-
-#################
-# Assign rewards to policy
 #
-# Policy is a 4 array
-# Policy is the size of every state * every action
+# Map is a 4D array of state-actions
 #
-# Assigns the reward to the state and action
-#################
-assign_reward <- function(policy, policy_visits, state_action, reward) {
-  # Convert the state_action row to numeric
-  indices = as.numeric(state_action)
-  
-  # Increment visits count
-  policy_visits[indices[1], indices[2], indices[3] + 1, indices[4]] =
-    policy_visits[indices[1], indices[2], indices[3] + 1, indices[4]] + 1
-  
-  # Calculate new mean
-  new_mean = (policy[indices[1], indices[2], indices[3] + 1, indices[4]] + reward) / policy_visits[indices[1], indices[2], indices[3] + 1, indices[4]]
-  
-  # Assign the reward to the appropriate position in the policy
-  policy[indices[1], indices[2], indices[3] + 1, indices[4]] = new_mean
-  
-  return(list(policy = policy, policy_visits = policy_visits))
-}
-
-####################
-# Evaluate policy
+# if update == TRUE
+# Updates the expected value for each s, a based on the total return
+# and number of visits
 #
-# n is the number of sample states
-####################
-evaluate_policy <- function(policy, n) {
-  wins =  0
-  ties =  0
-  losses =  0
-  for (i in 1:n) {
-    # Get a random state
-    state = random_state()
-    
-    # Perform actions on the state until player chooses to stay
-    action = which.max(policy[state[1], state[2], state[3] + 1, ])
-    
-    while (action == 2 && state[2] < 22) { # action 2 signifies hit
-      hit_value = hit(state[2], state[3])
-      state[2] = hit_value[1]
-      state[3] = hit_value[2]
-      action = which.max(policy[state[1], state[2], state[3] + 1, ])
-    }
-    
-    # Evaluate the state and tally wins/ties/losses
-    state_value = evaluate_state(finalize_state(state))
-    if (state_value == 1) {
-      wins = wins + 1
-    } else if (state_value == 0) {
-      ties = ties + 1
-    } else {
-      losses = losses + 1
-    }
+# else
+# Makes no changes to the map
+#
+# Returns the updated map and the new moving average for the s, a
+Q <- function(s, a, map, return = 1, visits = 1, update = FALSE) {
+  
+  if (update) {
+    map[s[1], s[2], s[3], a] = return / visits
   }
   
-  return(c(wins / n, ties / n, losses / n))
+  expected_value = map[s[1], s[2], s[3], a]
+  
+  return(list(map = map, value = expected_value))
 }
 
-######################
-# Train policy
+# Training function
 #
-# policy and policy visits track policy data
-#
-# n_episodes is the number of episodes to train over
-#
-# gamma is the devalue coefficient for each step an action is removed
-# from a result
-#
-# epsilon_start is the starting chance to explore vs exploit
-# epsilon_min is the value epsilon_start will linearly decay to over training
-######################
-monte_carlo_training <- function(policy, policy_visits, n_episodes, gamma, 
-                                 epsilon_start, epsilon_min) {
-  # Linear epsilon decay
-  epsilon_decay = (epsilon_start - epsilon_min) / n_episodes
+# n_episodes = # of training episodes
+# gamma = reward decay function
+# epsilon_start = starting chance to explore vs exploit
+# epsilon_end = ending chance to explore vs exploit
+# *epsilon decays exponentially
+# 
+# Returns a policy as a 4D array of actions based on the state
+monte_carlo_BJ <- function(n_episodes = 50000, gamma = 1, epsilon_start = 0.2, 
+               epsilon_end = 0.2) { 
+  # Initialize
+  # visible dealer card (max=11), player value (max=21), player ace (T/F),
+  # action (hit/stay)
+  policy <- array(0, dim = c(11, 21, 2))
+  returns <- array(0, dim = c(11, 21, 2, 2))
+  visits <- array(0, dim = c(11, 21, 2, 2))
+  expected_values <- array(0, dim = c(11, 21, 2, 2))
   
-  # Loop episodes
-  while (n_episodes > 0) {
-    # Reduce epsilon over time
-    epsilon = max(epsilon_min, n_episodes * epsilon_decay)
+  epsilon_decay_factor <- (epsilon_end / epsilon_start)^(1 / n_episodes)
+  
+  # For each episode
+  for (episode in seq(1, n_episodes)) {
+    # Set epsilon (exponential decay)
+    epsilon = epsilon_start * epsilon_decay_factor^episode
     
-    # Get a random state
-    state = random_state()
-    
-    # Randomly explore or exploit based on epsilon
-    if (runif(1) > epsilon) {
-      action = which.max(policy[state[1], state[2], state[3] + 1, ])
-    } else {
-      action = sample(1:2, 1)
+    # Generate an episode
+    episode = list()
+    s = random_state() # Random state
+    while (s[2] < 22) {
+      # Explore vs Exploit action based on epsilon
+      a = ifelse(runif(1) > epsilon && policy[s[1], s[2], s[3]] != 0, 
+                 policy[s[1], s[2], s[3]], sample(1:2, 1))
+      # Append state and action to episode
+      episode = append(episode, list(c(s, a)))
+      
+      if (a == 2) { # hit, modify state
+        hit_s = hit(s[2], s[3])
+        s[2] = hit_s[1]
+        s[3] = hit_s[2]
+      } else { # stay, end episode early
+        break;
+      }
     }
+    # Append final state for evaluation
+    episode = append(episode, list(c(s, 0)))
     
-    # Get state actions list
-    state_actions = data.frame()
-    # Record first state action
-    state_actions = rbind(state_actions, c(state, action))
-    # While action is to hit
-    while (state[2] < 22 && action == 2) {
+    # For each step of episode
+    G = 0
+    for (t in seq(from = length(episode) - 1, to = 1, by = -1)) {
+      # t, t-1, t-2, ...
+      # t is the last step of the episode, t-1 second last, etc.
       
-      # Hit player and update state
-      hit_value = hit(state[2], state[3])
-      state[2] = hit_value[1]
-      state[3] = hit_value[2]
+      # Initialize s, a
+      s = episode[[t]][1:3]
+      a = episode[[t]][4]
+      # Get Reward
+      G = R(episode[[t + 1]][1:3]) 
+      # Add reward to returns[s, a]
+      return_values = Returns(s, a, returns, add = G)
+      returns = return_values$map
+      return = return_values$return
+      # Update expected values
+      visits_values = N(s, a, visits, visited = TRUE)
+      visits = visits_values$map
+      visit = visits_values$visit
       
-      # Randomly explore or exploit based on epsilon constant
-      if (runif(1) > epsilon) {
-        action = which.max(policy[state[1], state[2], state[3] + 1, ])
+      expected_values = Q(s, a, expected_values, return = return, visits = visit, 
+                          update = TRUE)$map
+      
+      # Update policy to be greatest expected value
+      stay_expected = expected_values[s[1], s[2], s[3], 1]
+      hit_expected = expected_values[s[1], s[2], s[3], 2]
+      
+      if (stay_expected > hit_expected) {
+        policy_action = 1
+      } else if (hit_expected > stay_expected) {
+        policy_action = 2
       } else {
-        action = sample(1:2, 1)
+        # Break ties randomly
+        policy_action = sample(1:2, 1)
       }
       
-      # Record state action
-      state_actions = rbind(state_actions, c(state, action))
+      policy[s[1], s[2], s[3]] = policy_action
+      
+      # # testing
+      # print(s)
+      # print(a)
+      # print(G)
     }
-    
-    # Calculate and apply rewards to policy
-    rewards = Q(state_actions, gamma)
-    for (k in seq(1:nrow(state_actions))) {
-      updated_policy = assign_reward(policy, policy_visits, state_actions[k, ], rewards[k])
-      policy = updated_policy$policy
-      policy_visits = updated_policy$policy_visits
-    }
-    
-    n_episodes = n_episodes - 1
   }
   
   return(policy)
 }
 
-###########################
-# Plot results
-###########################
-# Load necessary libraries
-library(ggplot2)
 
-# Function to create a data frame for the policy and generate plots
-create_policy_plots <- function(policy, name) {
-  # Generate the policy data frame
-  policy_df <- data.frame()
-  
-  for (dealer in 2:11) {
-    for (player in 4:21) {
-      for (ace in 0:1) {
-        action <- which.max(policy[dealer, player, ace + 1, ])
-        policy_df <- rbind(policy_df, data.frame(Dealer = dealer, Player = player, Ace = ace, Action = action))
-      }
-    }
-  }
-  
-  # Convert Action to descriptive labels
-  policy_df$Action <- ifelse(policy_df$Action == 1, "Stay", "Hit")
-  
-  # Plot for states with an ace
-  plot_with_ace <- ggplot(policy_df[policy_df$Ace == 1, ], aes(x = Dealer, y = Player, fill = Action)) +
-    geom_tile(color = "white") +
-    scale_fill_manual(values = c("Hit" = "red", "Stay" = "blue")) +
-    labs(title = paste("Blackjack", name, "Policy Graph (With Ace)"),
-         x = "Dealer's Visible Value",
-         y = "Player's Value",
-         fill = "Action") +
-    theme_minimal() +
-    theme(panel.grid.major = element_blank(),
-          panel.grid.minor = element_blank())
-  
-  # Plot for states without an ace
-  plot_without_ace <- ggplot(policy_df[policy_df$Ace == 0, ], aes(x = Dealer, y = Player, fill = Action)) +
-    geom_tile(color = "white") +
-    scale_fill_manual(values = c("Hit" = "red", "Stay" = "blue")) +
-    labs(title = paste("Blackjack", name, "Policy Graph (Without Ace)"),
-         x = "Dealer's Visible Value",
-         y = "Player's Value",
-         fill = "Action") +
-    theme_minimal() +
-    theme(panel.grid.major = element_blank(),
-          panel.grid.minor = element_blank())
-  
-  return(list(policy_df = policy_df, plot_with_ace = plot_with_ace, plot_without_ace = plot_without_ace))
-}
-
-###################
-# Train policies
-###################
-# Function to train policies with different parameters
-train_policy <- function(policy_name, train = TRUE, n_episodes = 100000, 
-                         eval_games = 100000, gamma = 1, epsilon_start = 1, 
-                         epsilon_end = 1) {
-  # Initialize the policy and policy visits array
-  policy <- array(0, dim = c(11, 32, 2, 2))
-  visits <- array(0, dim = c(11, 32, 2, 2))
-  
-  # Train the policy (optional)
-  if (train ==  TRUE) {
-    print(paste("Training", policy_name))
-    policy <- monte_carlo_training(policy, visits, n_episodes, gamma, epsilon_start, epsilon_end)
-  }
-  
-  # Display the policy
-  # Generate plots for the policy
-  results = create_policy_plots(policy, policy_name)
-  plot_with_ace = results$plot_with_ace
-  plot_without_ace = results$plot_without_ace
-  
-  # Evaluate the policy win rate
-  win_rate = evaluate_policy(policy, eval_games)[1]
-  
-  # Display the plots and print the win rate
-  print(plot_with_ace)
-  print(plot_without_ace)
-  print(paste(policy_name, "win rate:", win_rate))
-  
-  return(policy)
-}
+###########
+# PLOTTING
+###########
 
 # Function to convert policy to a data frame
 policy_to_dataframe <- function(policy) {
-  # Initialize an empty data frame
-  policy_df <- data.frame()
+  # Initialize vectors to store the data
+  dealer_values <- c()
+  player_values <- c()
+  ace_values <- c()
+  actions <- c()
   
   # Iterate through each combination of dealer value, player value, and ace presence
   for (dealer in 2:11) {                # Dealer values from 2 to 11
     for (player in 4:21) {              # Player values from 4 to 21
-      for (ace in 0:1) {                # Ace presence: 0 (no ace), 1 (ace present)
-        # Extract Q-values for both actions (Hit and Stay)
-        hit_value = policy[dealer, player, ace + 1, 2]  # Q-value for Hit
-        stay_value = policy[dealer, player, ace + 1, 1] # Q-value for Stay
+      for (ace in 1:2) {                # Ace presence: 1 (no ace), 2 (ace present)
+        # Extract action
+        action = policy[dealer, player, ace]
         
-        # Append to the data frame
-        policy_df <- rbind(policy_df, data.frame(
-          Dealer = dealer,
-          Player = player,
-          Ace = ace,
-          HitValue = hit_value,
-          StayValue = stay_value
-        ))
+        # Append to vectors
+        dealer_values <- c(dealer_values, dealer)
+        player_values <- c(player_values, player)
+        ace_values <- c(ace_values, ace - 1)  # 0 for no ace, 1 for ace present
+        actions <- c(actions, action)
       }
     }
   }
+  
+  # Combine vectors into a data frame
+  policy_df <- data.frame(
+    Dealer = dealer_values,
+    Player = player_values,
+    Ace = ace_values,
+    Action = actions
+  )
   
   return(policy_df)
 }
 
 
-##############################
-# Main
-##############################
-policyA <- train_policy("A", n_episodes = 50000, eval_games = 10000, gamma = 1, epsilon_start = 0.2, epsilon_end = 0.2)
+# Load necessary libraries
+library(ggplot2)
+library(reshape2)
 
-# Create the policy data frame for policyA
-policyA_df <- policy_to_dataframe(policyA)
+# Function to create heat maps of the policy for both ace and no ace
+heat_map_policy <- function(policy_df) {
+  # Ensure Action is a factor with appropriate levels
+  policy_df$Action <- factor(policy_df$Action, levels = c(0, 1, 2), labels = c("No Data", "Stay", "Hit"))
+  
+  # Create a heat map for the case where ace is present
+  policy_ace <- policy_df[policy_df$Ace == 1, ]  # 1 for Ace Present
+  
+  # Create a heat map for the case where ace is not present
+  policy_no_ace <- policy_df[policy_df$Ace == 0, ]  # 0 for No Ace
+  
+  # Function to plot individual heat map
+  plot_heat_map <- function(data, title) {
+    if (nrow(data) == 0) {
+      warning("No data available for this heat map: ", title)
+      return(NULL)
+    }
+    
+    ggplot(data, aes(x = Dealer, y = Player)) +  # Swap x and y for rotation
+      geom_tile(aes(fill = Action), color = "white") +  # Use fill for the Action
+      scale_fill_manual(values = c("No Data" = "green", "Stay" = "blue", "Hit" = "red"),
+                        name = "Action") +
+      theme_minimal() +
+      labs(title = title,
+           x = "Dealer Value",  # Update x-axis label
+           y = "Player Value") +  # Update y-axis label
+      theme(axis.text.x = element_text(angle = 45, hjust = 1))
+  }
+  
+  # Plot for the case where ace is present
+  p1 <- plot_heat_map(policy_ace, "Heat Map of Blackjack Policy (Ace Present)")
+  
+  # Plot for the case where ace is not present
+  p2 <- plot_heat_map(policy_no_ace, "Heat Map of Blackjack Policy (No Ace)")
+  
+  # Display the plots
+  print(p1)
+  print(p2)
+}
+
+
+##########
+# TESTING
+##########
+
+
+# Evaluate policy
+#
+# n is the number of sample states
+evaluate_policy <- function(policy, n_tests = 50000) {
+  wins <- 0
+  
+  for (test in 1:n_tests) {
+    # Start with a random state
+    s <- random_state()  # Get a random state for each test
+    dealer_value <- s[1]
+    player_value <- s[2]
+    player_ace <- s[3]
+    
+    # Play the game using the policy
+    while (player_value < 22) {
+      action <- policy[dealer_value, player_value, player_ace]
+      
+      if (action == 2) {  # Hit
+        hit_s <- hit(player_value, player_ace)
+        player_value <- hit_s[1]
+        player_ace <- hit_s[2]
+      } else {  # Stay
+        break
+      }
+    }
+    
+    # Evaluate the final state after dealer's turn
+    final_state <- finalize_dealer(c(dealer_value, player_value, player_ace))
+    reward <- R(final_state)
+    
+    if (reward == 1) {
+      wins <- wins + 1  # Increment wins if the player won
+    }
+  }
+  
+  # Calculate win rate
+  win_rate <- wins / n_tests
+  return(win_rate)
+}
+
+
+#######
+# MAIN
+#######
+
+# Train policy
+policy <- monte_carlo_BJ()
+# Data frame for human-readable data
+policy_df <- policy_to_dataframe(policy)
+# Plot
+heat_map_policy(policy_df)
+
+# Random policy for winrate comparison
+rand_policy <- array(sample(1:2, size = 11 * 21 * 2, replace = TRUE), 
+                dim = c(11, 21, 2))
+
+# Estimate winrates
+n_tests = 50000
+rand_win_rate <- evaluate_policy(rand_policy, n_tests)
+win_rate <- evaluate_policy(policy, n_tests)
+
+# Print
+cat("Win rate of random policy over", n_tests, "games is:", rand_win_rate, "\n")
+cat("Win rate of trained policy over", n_tests, "games is:", win_rate, "\n")
