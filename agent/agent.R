@@ -89,10 +89,9 @@ finalize_dealer <- function(state) {
   return(state)
 }
 
-
-##########################
-# AGENT FUNCTIONS
-#########################
+###########
+# TRAINING
+###########
 
 # Reward function
 #
@@ -201,8 +200,7 @@ Q <- function(s, a, map, return = 1, visits = 1, update = FALSE) {
 # *epsilon decays exponentially
 # 
 # Returns a policy as a 4D array of actions based on the state
-monte_carlo_BJ <- function(n_episodes = 50000, gamma = 1, epsilon_start = 0.2, 
-               epsilon_end = 0.2) { 
+monte_carlo_BJ <- function(n_episodes = 50000, gamma = 1, epsilon = 0.1) { 
   # Initialize
   # visible dealer card (max=11), player value (max=21), player ace (T/F),
   # action (hit/stay)
@@ -211,12 +209,8 @@ monte_carlo_BJ <- function(n_episodes = 50000, gamma = 1, epsilon_start = 0.2,
   visits <- array(0, dim = c(11, 21, 2, 2))
   expected_values <- array(0, dim = c(11, 21, 2, 2))
   
-  epsilon_decay_factor <- (epsilon_end / epsilon_start)^(1 / n_episodes)
-  
   # For each episode
   for (episode in seq(1, n_episodes)) {
-    # Set epsilon (exponential decay)
-    epsilon = epsilon_start * epsilon_decay_factor^episode
     
     # Generate an episode
     episode = list()
@@ -249,7 +243,7 @@ monte_carlo_BJ <- function(n_episodes = 50000, gamma = 1, epsilon_start = 0.2,
       s = episode[[t]][1:3]
       a = episode[[t]][4]
       # Get Reward
-      G = R(episode[[t + 1]][1:3]) 
+      G = gamma * G + R(episode[[t + 1]][1:3])
       # Add reward to returns[s, a]
       return_values = Returns(s, a, returns, add = G)
       returns = return_values$map
@@ -276,20 +270,14 @@ monte_carlo_BJ <- function(n_episodes = 50000, gamma = 1, epsilon_start = 0.2,
       }
       
       policy[s[1], s[2], s[3]] = policy_action
-      
-      # # testing
-      # print(s)
-      # print(a)
-      # print(G)
     }
   }
   
   return(policy)
 }
 
-
 ###########
-# PLOTTING
+# PLOT
 ###########
 
 # Function to convert policy to a data frame
@@ -350,9 +338,10 @@ heat_map_policy <- function(policy_df) {
       return(NULL)
     }
     
-    ggplot(data, aes(x = Dealer, y = Player)) +  # Swap x and y for rotation
+    ggplot(data, aes(x = Dealer, y = Player)) +
       geom_tile(aes(fill = Action), color = "white") +  # Use fill for the Action
-      scale_fill_manual(values = c("No Data" = "green", "Stay" = "blue", "Hit" = "red"),
+      scale_fill_manual(values = c("No Data" = "darkgray", "Stay" = "blanchedalmond", 
+                                   "Hit" = "navy"),
                         name = "Action") +
       theme_minimal() +
       labs(title = title,
@@ -362,7 +351,7 @@ heat_map_policy <- function(policy_df) {
   }
   
   # Plot for the case where ace is present
-  p1 <- plot_heat_map(policy_ace, "Heat Map of Blackjack Policy (Ace Present)")
+  p1 <- plot_heat_map(policy_ace, "Heat Map of Blackjack Policy (Ace)")
   
   # Plot for the case where ace is not present
   p2 <- plot_heat_map(policy_no_ace, "Heat Map of Blackjack Policy (No Ace)")
@@ -372,11 +361,9 @@ heat_map_policy <- function(policy_df) {
   print(p2)
 }
 
-
 ##########
-# TESTING
+# EVALUATE
 ##########
-
 
 # Evaluate policy
 #
@@ -418,13 +405,19 @@ evaluate_policy <- function(policy, n_tests = 50000) {
   return(win_rate)
 }
 
+############
+# TESTS
+############
+test_R <- function() {
+  
+}
 
 #######
 # MAIN
 #######
 
 # Train policy
-policy <- monte_carlo_BJ()
+policy <- monte_carlo_BJ(n_episodes = 100000, gamma = 0)
 # Data frame for human-readable data
 policy_df <- policy_to_dataframe(policy)
 # Plot
