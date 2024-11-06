@@ -54,6 +54,32 @@ hit <- function(value, ace) {
 random_state <- function() {
   
   # Dealer simply gets one card
+  dealer = sample(2:11, 1)
+  
+  # Player gets 2 cards, track ace
+  player_1 = sample(2:11, 1)
+  player_2 = sample(2:11, 1)
+  
+  if (player_1 == 11 && player_2 == 11) {
+    player = 12
+    ace = 2
+  } else if (player_1 == 11 || player_2 == 11) {
+    player = player_1 + player_2
+    ace = 2
+  } else {
+    player = player_1 + player_2
+    ace = 1
+  }
+  
+  return(c(dealer, player, ace))
+}
+
+# Get a real state
+#
+# Difference from random state is cards are dealt with weights to a deck
+real_state <- function() {
+  
+  # Dealer simply gets one card
   dealer = hit(0, 1)[1]
   
   # Player gets 2 cards, track ace
@@ -67,9 +93,9 @@ random_state <- function() {
 #
 # Follows dealer logic (hit until >= 17) to calculate the final
 # dealer hand
-finalize_dealer <- function(state) {
+finalize_dealer <- function(s) {
   # Check for dealer ace
-  dealer = state[1]
+  dealer = s[1]
   if (dealer == 11) {
     dealer_ace = 2
   } else {
@@ -85,8 +111,8 @@ finalize_dealer <- function(state) {
     dealer_hand = hit(dealer_hand[1], dealer_hand[2])
   }
   
-  state[1] = dealer_hand[1]
-  return(state)
+  s[1] = dealer_hand[1]
+  return(s)
 }
 
 ###########
@@ -105,12 +131,9 @@ finalize_dealer <- function(state) {
 # Returns 0 on a tie
 # Returns -1 on a player loss
 R <- function(s) {
-  # Get the rest of dealer cards
-  state = finalize_dealer(s)
-  
   # If player is bust, dealer wins
-  dealer = state[1]
-  player = state[2]
+  dealer = s[1]
+  player = s[2]
   
   # Player bust = loss
   if (player > 21) {
@@ -118,7 +141,7 @@ R <- function(s) {
   }
   
   # Only dealer bust = win
-  if (player <= 21 && dealer > 21) {
+  if (dealer > 21) {
     return(1)
   }
   
@@ -195,12 +218,11 @@ Q <- function(s, a, map, return = 1, visits = 1, update = FALSE) {
 #
 # n_episodes = # of training episodes
 # gamma = reward decay function
-# epsilon_start = starting chance to explore vs exploit
-# epsilon_end = ending chance to explore vs exploit
+# epsilon_start = 0-1 probability to explore, decays by 1% each visit
 # *epsilon decays exponentially
 # 
 # Returns a policy as a 4D array of actions based on the state
-monte_carlo_BJ <- function(n_episodes = 50000, gamma = 1, epsilon = 0.1) { 
+monte_carlo_BJ <- function(n_episodes = 50000, gamma = 1, epsilon_start = 1) { 
   # Initialize
   # visible dealer card (max=11), player value (max=21), player ace (T/F),
   # action (hit/stay)
@@ -216,6 +238,14 @@ monte_carlo_BJ <- function(n_episodes = 50000, gamma = 1, epsilon = 0.1) {
     episode = list()
     s = random_state() # Random state
     while (s[2] < 22) {
+      # Calculate the average visits for both actions (1 and 2)
+      visit_count1 = visits[s[1], s[2], s[3], 1]
+      visit_count2 = visits[s[1], s[2], s[3], 2]
+      avg_visits = (visit_count1 + visit_count2) / 2
+      
+      # Calculate epsilon with average visit count
+      epsilon = epsilon_start * (100 / (100 + avg_visits))
+      
       # Explore vs Exploit action based on epsilon
       a = ifelse(runif(1) > epsilon && policy[s[1], s[2], s[3]] != 0, 
                  policy[s[1], s[2], s[3]], sample(1:2, 1))
@@ -234,6 +264,8 @@ monte_carlo_BJ <- function(n_episodes = 50000, gamma = 1, epsilon = 0.1) {
     episode = append(episode, list(c(s, 0)))
     
     # For each step of episode
+    # Emphasize value of final state, winning overall matters more
+    final_result = R(finalize_dealer(episode[[length(episode)]]))
     G = 0
     for (t in seq(from = length(episode) - 1, to = 1, by = -1)) {
       # t, t-1, t-2, ...
@@ -242,8 +274,11 @@ monte_carlo_BJ <- function(n_episodes = 50000, gamma = 1, epsilon = 0.1) {
       # Initialize s, a
       s = episode[[t]][1:3]
       a = episode[[t]][4]
-      # Get Reward
-      G = gamma * G + R(episode[[t + 1]][1:3])
+      # Get a result for the last state
+      last_s = episode[[t + 1]][1:3]
+      last_s = finalize_dealer(last_s)
+      # Get Reward as average of total rewards over episode so far, devalued by gamma
+      G = ((gamma * G) + R(last_s)) / (length(episode) - t)
       # Add reward to returns[s, a]
       return_values = Returns(s, a, returns, add = G)
       returns = return_values$map
@@ -315,13 +350,12 @@ policy_to_dataframe <- function(policy) {
   return(policy_df)
 }
 
-
 # Load necessary libraries
 library(ggplot2)
 library(reshape2)
 
 # Function to create heat maps of the policy for both ace and no ace
-heat_map_policy <- function(policy_df) {
+heat_map_policy <- function(policy_df, name) {
   # Ensure Action is a factor with appropriate levels
   policy_df$Action <- factor(policy_df$Action, levels = c(0, 1, 2), labels = c("No Data", "Stay", "Hit"))
   
@@ -351,10 +385,12 @@ heat_map_policy <- function(policy_df) {
   }
   
   # Plot for the case where ace is present
-  p1 <- plot_heat_map(policy_ace, "Heat Map of Blackjack Policy (Ace)")
+  label = paste("Policy", name, "(Ace)")
+  p1 <- plot_heat_map(policy_ace, label)
   
   # Plot for the case where ace is not present
-  p2 <- plot_heat_map(policy_no_ace, "Heat Map of Blackjack Policy (No Ace)")
+  label = paste("Policy", name, "(No Ace)")
+  p2 <- plot_heat_map(policy_no_ace, label)
   
   # Display the plots
   print(p1)
@@ -372,8 +408,8 @@ evaluate_policy <- function(policy, n_tests = 50000) {
   wins <- 0
   
   for (test in 1:n_tests) {
-    # Start with a random state
-    s <- random_state()  # Get a random state for each test
+    # Start with a real state
+    s <- real_state()
     dealer_value <- s[1]
     player_value <- s[2]
     player_ace <- s[3]
@@ -405,33 +441,74 @@ evaluate_policy <- function(policy, n_tests = 50000) {
   return(win_rate)
 }
 
-############
-# TESTS
-############
-test_R <- function() {
-  
-}
-
 #######
 # MAIN
 #######
-
-# Train policy
-policy <- monte_carlo_BJ(n_episodes = 100000, gamma = 0)
-# Data frame for human-readable data
-policy_df <- policy_to_dataframe(policy)
-# Plot
-heat_map_policy(policy_df)
-
 # Random policy for winrate comparison
 rand_policy <- array(sample(1:2, size = 11 * 21 * 2, replace = TRUE), 
                 dim = c(11, 21, 2))
 
-# Estimate winrates
-n_tests = 50000
-rand_win_rate <- evaluate_policy(rand_policy, n_tests)
-win_rate <- evaluate_policy(policy, n_tests)
+# Test different policies
+n_tests = 100000
 
-# Print
+# Random policy
+rand_win_rate <- evaluate_policy(rand_policy, n_tests)
 cat("Win rate of random policy over", n_tests, "games is:", rand_win_rate, "\n")
-cat("Win rate of trained policy over", n_tests, "games is:", win_rate, "\n")
+
+# Trained policies
+training_rounds = 10
+
+n_episodes = 1000
+for (i in seq(1:training_rounds)) {
+  policy <- monte_carlo_BJ(n_episodes = n_episodes, gamma = 1, epsilon_start = 1)
+  win_rate <- evaluate_policy(policy, n_tests)
+  sum_win_rate <- sum_win_rate + win_rate
+}
+policy_df <- policy_to_dataframe(policy)
+heat_map_policy(policy_df, toString(n_episodes))
+avg_win_rate <- sum_win_rate / training_rounds
+cat("Average win rate of policy trained on", n_episodes, "episodes over", n_tests, "games is:", avg_win_rate, "\n")
+
+n_episodes = 10000
+for (i in seq(1:training_rounds)) {
+  policy <- monte_carlo_BJ(n_episodes = n_episodes, gamma = 1, epsilon_start = 1)
+  win_rate <- evaluate_policy(policy, n_tests)
+  sum_win_rate <- sum_win_rate + win_rate
+}
+policy_df <- policy_to_dataframe(policy)
+heat_map_policy(policy_df, toString(n_episodes))
+avg_win_rate <- sum_win_rate / training_rounds
+cat("Average win rate of policy trained on", n_episodes, "episodes over", n_tests, "games is:", avg_win_rate, "\n")
+
+n_episodes = 50000
+for (i in seq(1:training_rounds)) {
+  policy <- monte_carlo_BJ(n_episodes = n_episodes, gamma = 1, epsilon_start = 1)
+  win_rate <- evaluate_policy(policy, n_tests)
+  sum_win_rate <- sum_win_rate + win_rate
+}
+policy_df <- policy_to_dataframe(policy)
+heat_map_policy(policy_df, toString(n_episodes))
+avg_win_rate <- sum_win_rate / training_rounds
+cat("Average win rate of policy trained on", n_episodes, "episodes over", n_tests, "games is:", avg_win_rate, "\n")
+
+n_episodes = 100000
+for (i in seq(1:training_rounds)) {
+  policy <- monte_carlo_BJ(n_episodes = n_episodes, gamma = 1, epsilon_start = 1)
+  win_rate <- evaluate_policy(policy, n_tests)
+  sum_win_rate <- sum_win_rate + win_rate
+}
+policy_df <- policy_to_dataframe(policy)
+heat_map_policy(policy_df, toString(n_episodes))
+avg_win_rate <- sum_win_rate / training_rounds
+cat("Average win rate of policy trained on", n_episodes, "episodes over", n_tests, "games is:", avg_win_rate, "\n")
+
+n_episodes = 250000
+for (i in seq(1:training_rounds)) {
+  policy <- monte_carlo_BJ(n_episodes = n_episodes, gamma = 1, epsilon_start = 1)
+  win_rate <- evaluate_policy(policy, n_tests)
+  sum_win_rate <- sum_win_rate + win_rate
+}
+policy_df <- policy_to_dataframe(policy)
+heat_map_policy(policy_df, toString(n_episodes))
+avg_win_rate <- sum_win_rate / training_rounds
+cat("Average win rate of policy trained on", n_episodes, "episodes over", n_tests, "games is:", avg_win_rate, "\n")
