@@ -449,16 +449,17 @@ rand_policy <- array(sample(1:2, size = 11 * 21 * 2, replace = TRUE),
                 dim = c(11, 21, 2))
 
 # Test different policies
-n_tests = 100000
+n_tests <- 50000
 
 # Random policy
 rand_win_rate <- evaluate_policy(rand_policy, n_tests)
 cat("Win rate of random policy over", n_tests, "games is:", rand_win_rate, "\n")
 
 # Trained policies
-training_rounds = 10
+training_rounds <- 10
 
-n_episodes = 1000
+n_episodes <- 1000
+sum_win_rate <- 0
 for (i in seq(1:training_rounds)) {
   policy <- monte_carlo_BJ(n_episodes = n_episodes, gamma = 1, epsilon_start = 1)
   win_rate <- evaluate_policy(policy, n_tests)
@@ -469,7 +470,8 @@ heat_map_policy(policy_df, toString(n_episodes))
 avg_win_rate <- sum_win_rate / training_rounds
 cat("Average win rate of policy trained on", n_episodes, "episodes over", n_tests, "games is:", avg_win_rate, "\n")
 
-n_episodes = 10000
+n_episodes <- 10000
+sum_win_rate <- 0
 for (i in seq(1:training_rounds)) {
   policy <- monte_carlo_BJ(n_episodes = n_episodes, gamma = 1, epsilon_start = 1)
   win_rate <- evaluate_policy(policy, n_tests)
@@ -480,7 +482,8 @@ heat_map_policy(policy_df, toString(n_episodes))
 avg_win_rate <- sum_win_rate / training_rounds
 cat("Average win rate of policy trained on", n_episodes, "episodes over", n_tests, "games is:", avg_win_rate, "\n")
 
-n_episodes = 50000
+n_episodes <- 50000
+sum_win_rate <- 0
 for (i in seq(1:training_rounds)) {
   policy <- monte_carlo_BJ(n_episodes = n_episodes, gamma = 1, epsilon_start = 1)
   win_rate <- evaluate_policy(policy, n_tests)
@@ -491,7 +494,8 @@ heat_map_policy(policy_df, toString(n_episodes))
 avg_win_rate <- sum_win_rate / training_rounds
 cat("Average win rate of policy trained on", n_episodes, "episodes over", n_tests, "games is:", avg_win_rate, "\n")
 
-n_episodes = 100000
+n_episodes <- 100000
+sum_win_rate <- 0
 for (i in seq(1:training_rounds)) {
   policy <- monte_carlo_BJ(n_episodes = n_episodes, gamma = 1, epsilon_start = 1)
   win_rate <- evaluate_policy(policy, n_tests)
@@ -502,7 +506,8 @@ heat_map_policy(policy_df, toString(n_episodes))
 avg_win_rate <- sum_win_rate / training_rounds
 cat("Average win rate of policy trained on", n_episodes, "episodes over", n_tests, "games is:", avg_win_rate, "\n")
 
-n_episodes = 250000
+n_episodes <- 250000
+sum_win_rate <- 0
 for (i in seq(1:training_rounds)) {
   policy <- monte_carlo_BJ(n_episodes = n_episodes, gamma = 1, epsilon_start = 1)
   win_rate <- evaluate_policy(policy, n_tests)
@@ -512,3 +517,13 @@ policy_df <- policy_to_dataframe(policy)
 heat_map_policy(policy_df, toString(n_episodes))
 avg_win_rate <- sum_win_rate / training_rounds
 cat("Average win rate of policy trained on", n_episodes, "episodes over", n_tests, "games is:", avg_win_rate, "\n")
+
+##################
+# Export
+##################
+library(jsonlite)
+
+export_policy <- function(policy_df) {
+  x <- toJSON(policy_df)
+  write(x, "model.json")
+}
