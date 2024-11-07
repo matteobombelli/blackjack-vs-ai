@@ -444,9 +444,25 @@ evaluate_policy <- function(policy, n_tests = 50000) {
 #######
 # MAIN
 #######
+# Train policies function
+train_policy <- function(training_rounds, n_episodes, n_tests) {
+  sum_win_rate <- 0
+  for (i in seq(1:training_rounds)) {
+    policy <- monte_carlo_BJ(n_episodes = n_episodes, gamma = 1, epsilon_start = 1)
+    win_rate <- evaluate_policy(policy, n_tests)
+    sum_win_rate <- sum_win_rate + win_rate
+  }
+  policy_df <- policy_to_dataframe(policy)
+  heat_map_policy(policy_df, toString(n_episodes))
+  avg_win_rate <- sum_win_rate / training_rounds
+  cat("Average win rate of policy trained on", n_episodes, "episodes over", n_tests, "games is:", avg_win_rate, "\n")
+  
+  return(policy_df)
+}
+
 # Random policy for winrate comparison
 rand_policy <- array(sample(1:2, size = 11 * 21 * 2, replace = TRUE), 
-                dim = c(11, 21, 2))
+                     dim = c(11, 21, 2))
 
 # Test different policies
 n_tests <- 50000
@@ -455,68 +471,15 @@ n_tests <- 50000
 rand_win_rate <- evaluate_policy(rand_policy, n_tests)
 cat("Win rate of random policy over", n_tests, "games is:", rand_win_rate, "\n")
 
-# Trained policies
-training_rounds <- 10
+policy_A_df <- train_policy(10, 1000, n_tests)
 
-n_episodes <- 1000
-sum_win_rate <- 0
-for (i in seq(1:training_rounds)) {
-  policy <- monte_carlo_BJ(n_episodes = n_episodes, gamma = 1, epsilon_start = 1)
-  win_rate <- evaluate_policy(policy, n_tests)
-  sum_win_rate <- sum_win_rate + win_rate
-}
-policy_df <- policy_to_dataframe(policy)
-heat_map_policy(policy_df, toString(n_episodes))
-avg_win_rate <- sum_win_rate / training_rounds
-cat("Average win rate of policy trained on", n_episodes, "episodes over", n_tests, "games is:", avg_win_rate, "\n")
+policy_B_df <- train_policy(10, 10000, n_tests)
 
-n_episodes <- 10000
-sum_win_rate <- 0
-for (i in seq(1:training_rounds)) {
-  policy <- monte_carlo_BJ(n_episodes = n_episodes, gamma = 1, epsilon_start = 1)
-  win_rate <- evaluate_policy(policy, n_tests)
-  sum_win_rate <- sum_win_rate + win_rate
-}
-policy_df <- policy_to_dataframe(policy)
-heat_map_policy(policy_df, toString(n_episodes))
-avg_win_rate <- sum_win_rate / training_rounds
-cat("Average win rate of policy trained on", n_episodes, "episodes over", n_tests, "games is:", avg_win_rate, "\n")
+policy_C_df <- train_policy(10, 50000, n_tests)
 
-n_episodes <- 50000
-sum_win_rate <- 0
-for (i in seq(1:training_rounds)) {
-  policy <- monte_carlo_BJ(n_episodes = n_episodes, gamma = 1, epsilon_start = 1)
-  win_rate <- evaluate_policy(policy, n_tests)
-  sum_win_rate <- sum_win_rate + win_rate
-}
-policy_df <- policy_to_dataframe(policy)
-heat_map_policy(policy_df, toString(n_episodes))
-avg_win_rate <- sum_win_rate / training_rounds
-cat("Average win rate of policy trained on", n_episodes, "episodes over", n_tests, "games is:", avg_win_rate, "\n")
+policy_D_df <- train_policy(10, 100000, n_tests)
 
-n_episodes <- 100000
-sum_win_rate <- 0
-for (i in seq(1:training_rounds)) {
-  policy <- monte_carlo_BJ(n_episodes = n_episodes, gamma = 1, epsilon_start = 1)
-  win_rate <- evaluate_policy(policy, n_tests)
-  sum_win_rate <- sum_win_rate + win_rate
-}
-policy_df <- policy_to_dataframe(policy)
-heat_map_policy(policy_df, toString(n_episodes))
-avg_win_rate <- sum_win_rate / training_rounds
-cat("Average win rate of policy trained on", n_episodes, "episodes over", n_tests, "games is:", avg_win_rate, "\n")
-
-n_episodes <- 250000
-sum_win_rate <- 0
-for (i in seq(1:training_rounds)) {
-  policy <- monte_carlo_BJ(n_episodes = n_episodes, gamma = 1, epsilon_start = 1)
-  win_rate <- evaluate_policy(policy, n_tests)
-  sum_win_rate <- sum_win_rate + win_rate
-}
-policy_df <- policy_to_dataframe(policy)
-heat_map_policy(policy_df, toString(n_episodes))
-avg_win_rate <- sum_win_rate / training_rounds
-cat("Average win rate of policy trained on", n_episodes, "episodes over", n_tests, "games is:", avg_win_rate, "\n")
+policy_E_df <- train_policy(10, 250000, n_tests)
 
 ##################
 # Export
