@@ -3,7 +3,7 @@
 ## Agent
 The agent is a monte-carlo reinforcement-trained statistical model.  
 
-It was trained on 250000 episodes using a First-Visit monte-carlo training algorithm in R.  
+It was trained on 250,000 episodes using a first-visit monte-carlo training algorithm in R.  
 
 The model achieves a winrate of **43.3%**, up from a random strategy winrate of roughly 28%.  
 
