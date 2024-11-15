@@ -68,7 +68,7 @@ epsilon = epsilon_start * (100 / (100 + avg_visits))
 ε was taken as 1 to incentivise early exploration, rather than exploit an arbirtary policy.
 
 ### Improving the Model
-Throughout training, a major roadblock was achieving sufficient training for the less likely to occur states. A partial solution to this was removing the weighting of genuine states that occurs by face cards all being worth 10. To acheive this, random states were generated in each episode without any card weighting. This improved training results and reduced training times.
+Throughout training, a major roadblock was achieving sufficient training for the less likely to occur states. A partial solution to this was removing the weighting of card distribution that occurs in a natural deck, since face cards all have a value of 10. To achieve this, random states were generated in each episode without any card weighting. This improved training results and reduced training times.
 
 Additional measures to be taken would be to deliberately focus on states with less visits, or take the average of multiple models.  
 
