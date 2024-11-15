@@ -54,7 +54,9 @@ A blackjack hand is won only through the final outcome, as such long term outcom
 Thus, γ = 1 was used.
 
 ### Epsilon Explore vs Exploit
-Epsilon (ε) defines the chance for the agent to explore (use random strategy) or exploit (use current highest expected value) when deciding any given action.  
+Epsilon (ε) defines the probability for the agent to explore (use random strategy) rather than exploit (use current highest expected value) when deciding any given action.  
+P(explore) = ε  
+P(exploit) = 1 - ε  
 
 For this model, the best results were achieved with a large starting ε that decays as time progresses. Additionally, given some states are trained more often than others (i.e. s = [10, 20, 1] is much more common than s = [2, 4, 1]), it is wise to decay epsilon uniquely for each state.  
 
