@@ -35,4 +35,10 @@
         winChips(winnings: number) {
             this.chips += winnings;
         }
+
+        // Resets hand cards and value
+        resetCards(FirstCard: Card, SecondCard: Card) {
+            this.hand = [FirstCard, SecondCard];
+            this.value = FirstCard.value + FirstCard.value;
+        }
     }
