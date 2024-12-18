@@ -471,15 +471,15 @@ n_tests <- 50000
 rand_win_rate <- evaluate_policy(rand_policy, n_tests)
 cat("Win rate of random policy over", n_tests, "games is:", rand_win_rate, "\n")
 
-policy_A_df <- train_policy(10, 1000, n_tests)
+policy_A_df <- train_policy(1, 1000, n_tests)
 
-policy_B_df <- train_policy(10, 10000, n_tests)
+policy_B_df <- train_policy(1, 10000, n_tests)
 
-policy_C_df <- train_policy(10, 50000, n_tests)
+policy_C_df <- train_policy(1, 50000, n_tests)
 
-policy_D_df <- train_policy(10, 100000, n_tests)
+policy_D_df <- train_policy(1, 100000, n_tests)
 
-policy_E_df <- train_policy(10, 250000, n_tests)
+policy_E_df <- train_policy(1, 250000, n_tests)
 
 ##################
 # Export
