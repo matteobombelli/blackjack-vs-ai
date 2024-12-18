@@ -1,6 +1,6 @@
 import shuffle from './shuffle'
 
-type Card = {
+export type Card = {
     rank: string;
     suit: string;
     value: number;
@@ -10,7 +10,7 @@ type DeckProps = {
     size: number; // Number of full decks
 };
 
-class Deck {
+export class Deck {
     deck: Card[]; // Array to store the shuffled deck
 
     constructor(props: DeckProps) {
