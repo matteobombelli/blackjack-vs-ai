@@ -1,5 +1,5 @@
 import { Card } from '../objects/Deck'
-import './App.css'
+import '../App.css'
 
 type CardImageProps = {
     card: Card;

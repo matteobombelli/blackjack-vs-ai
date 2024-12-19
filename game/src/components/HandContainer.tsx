@@ -1,7 +1,7 @@
 import Hand from '../objects/Hand.ts'
 import CardImage from './CardImage.tsx'
 import ChipBalance from './ChipBalance.tsx'
-import './App.css'
+import '../App.css'
 
 type HandContainerProps = {
     hand: Hand;
