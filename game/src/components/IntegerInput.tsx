@@ -1,12 +1,13 @@
 import React, { useState } from 'react';
 import '../App.css'
 
-interface IntegerInputProps {
+type IntegerInputProps = {
   output: (bet: number) => void;
   error: string;
+  isEditable: boolean;
 }
 
-export default function IntegerInput({ output, error }: IntegerInputProps) {
+export default function IntegerInput({ output, error, isEditable }: IntegerInputProps) {
   const [value, setValue] = useState<string>("");
 
   // Parse value to IntString
@@ -18,7 +19,10 @@ export default function IntegerInput({ output, error }: IntegerInputProps) {
 
   return (
   <>
-    <input type="text" value={value} onChange={handleValueChange} />
+    <div className="integer-input">
     <p className="error">{error}</p>
-  </> );
+    <input type="text" value={value} onChange={handleValueChange} readOnly={!isEditable} />
+    </div>
+  </> 
+  );
 }

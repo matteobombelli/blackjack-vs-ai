@@ -7,27 +7,33 @@ export default class Hand {
     private readonly cardBack: Card = {
         rank: "none",
         suit: "none",
-        value: -1,
+        value: 0,
     };
     
     // Default Constructor
-    constructor() {
+    constructor(chips: number) {
         this.cards = [this.cardBack, this.cardBack];
         this.value = 0;
-        this.chips = 0;
+        this.chips = chips;
     }
 
     // Clone for copying
     clone(): Hand {
-        const newHand = new Hand();
+        const newHand = new Hand(this.chips);
         newHand.cards = this.cards;
         newHand.value = this.value;
-        newHand.chips = this.chips;
         return newHand;
     }
 
     addCard(card: Card) {
-        this.cards.push(card);
+        // Replace cardBack if in hand
+        if (this.cards.includes(this.cardBack)) {
+            let index = this.cards.indexOf(this.cardBack);
+            this.cards[index] = card;
+        } else {
+            this.cards.push(card);
+        }
+        
         this.value += card.value;
     }
     

@@ -1,13 +1,5 @@
-button {
+.hand-container {
 
-}
-
-input {
-
-}
-
-.error {
-    
 }
 
 .hand {
@@ -32,4 +24,36 @@ input {
 
 .chips p {
 
+}
+
+.controls-container {
+    
+}
+
+button {
+
+}
+
+button:hover {
+
+}
+
+button:disabled {
+
+}
+
+input {
+
+}
+
+input:read-only {
+    
+}
+
+.integer-input {
+
+}
+
+.error {
+    
 }

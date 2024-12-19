@@ -10,9 +10,17 @@ const STARTING_CHIPS: number = 100;
 
 export default function App() {
   const [deck, setDeck] = useState<Deck>(new Deck(SHOE_SIZE));
-  const [playerHand, setPlayerHand] = useState<Hand>(new Hand());
-  const [playerBet, setPlayerBet] = useState<number>(0);  
+
+  const [dealerHand, setDealerHand] = useState<Hand>(new Hand(STARTING_CHIPS));
+
+  const [playerHand, setPlayerHand] = useState<Hand>(new Hand(STARTING_CHIPS));
+  const [playerBet, setPlayerBet] = useState<number>(0); 
   const [playerBetError, setPlayerBetError] = useState<string>("");
+
+  const [agentHand, setAgentHand] = useState<Hand>(new Hand(-1));
+  const [agentBet, setAgentBet] = useState<number>(0);
+
+  const [roundStarted, setRoundStarted] = useState<boolean>(false);
 
   function validateBet(bet: number) {
       if (bet > Number.MAX_SAFE_INTEGER) { // Check for overflow
@@ -28,17 +36,45 @@ export default function App() {
   }
 
   function startRound() {
-    let newPlayerHand = playerHand.clone();
-    newPlayerHand.winChips(100);
-    setPlayerHand(newPlayerHand);
+    // Check player bet is valid
+    if (playerBetError != "") {
+      setPlayerBetError("Invalid Bet, cannot start round");
+      return;
+    }
+    
+    // Initial Deal
+
+    // Agent makes moves from ./model.json
+
+    // Set round as started
+    setRoundStarted(true);
+  }
+
+  function hit(hand: Hand, setter: React.Dispatch<React.SetStateAction<Hand>>) {
+
+  }
+
+  function endRound() {
+
+    // Set round as not started
+    setRoundStarted(false);
   }
 
   return (
     <>
-      <HandContainer hand={playerHand} bet={playerBet} name={"Player"}/> 
-      <br />
-      <IntegerInput output={validateBet} error={playerBetError}/>  
-      <button onClick={startRound}>Bet</button>
+      <div className="hand-container">
+        <HandContainer hand={dealerHand} bet={-1} name={"Dealer"}/>
+      </div>
+      <div className="hand-container">
+        <HandContainer hand={playerHand} bet={playerBet} name={"Player"}/>
+        <HandContainer hand={agentHand} bet={agentBet} name={"Agent"}/>
+      </div>
+      <div className="controls-container">
+        <button onClick={() => hit(playerHand, setPlayerHand)} disabled={!roundStarted}>Hit</button>
+        <button onClick={endRound} disabled={!roundStarted}>Stay</button>
+        <IntegerInput output={validateBet} error={playerBetError} isEditable={!roundStarted} />  
+        <button onClick={startRound} disabled={roundStarted}>Bet</button>
+      </div>
     </>
   )
 }
