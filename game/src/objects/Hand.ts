@@ -73,6 +73,14 @@ export default class Hand {
         newHand.chips += winnings; // Update chips in the new instance
         return newHand; // Return the updated instance
     }
+
+    length() { // Returns length without cardBack cards
+        let nonEmptyCards = this.cards.filter(card => 
+            card.rank != this.cardBack.rank 
+            && card.suit != this.cardBack.suit 
+            && card.value != this.cardBack.value);
+        return nonEmptyCards.length;
+    }
     
 
     // Resets hand cards and value
