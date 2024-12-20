@@ -48,16 +48,30 @@ export default function App() {
     loadData();
   }, []);
 
-  // Function to trigger agent actions
+  // UseEffect to trigger agent actions
   useEffect(() => { // Perform agent actions
-    if (agentTurn == true
-        && dealerHand.length() == 1
+    if (agentTurn === true
+        && dealerHand.length() === 1
         && agentHand.length() >= 2) { // After initial deal
       // Agent performs actions until stay or undefined
       // 1 action every BOT_DELAY ms
       setTimeout(performAgentAction, BOT_DELAY);
     }
   }, [agentTurn, agentHand, dealerHand]);
+
+  // UseEffect to end round on player bust
+  useEffect(() => {
+    if (playerHand.value > 21) {
+      endRound();
+    }
+  }, [playerHand])
+
+  // UseEffect to trigger dealer actions
+  useEffect(() => {
+    if (dealerTurn === true) {
+      setTimeout(performDealerAction, BOT_DELAY);
+    }
+  }, [dealerTurn, dealerHand])
 
   function validateBet(bet: number, chips: number): string {
     if (bet > Number.MAX_SAFE_INTEGER) // Check for overflow
@@ -96,6 +110,14 @@ export default function App() {
     } else { // Stop loop
       setAgentTurn(false); // End agent turn
       setPlayerTurn(true); // Go to player turn
+    }
+  }
+
+  function performDealerAction() {
+    if (dealerHand.value < 16) { // Hit until 16 or higher
+      hit(dealerHand, setDealerHand);
+    } else { // value >= 16, end turn
+      setDealerTurn(false);
     }
   }
 
@@ -148,41 +170,26 @@ export default function App() {
   }
 
   function endRound() {
-    // Set round ended
-    setPlayerTurn(false); // This triggers dealer logic
-
-    // Trigger dealer logic
-
-    // Deal
-    // Give winnings
-
-    // Reset bets to 0
-
-    // Get new deck if necessary
-    // if deck > 50% used, replace
-
-    // Determine Game Over
-
+    setPlayerTurn(false);
+    setDealerTurn(true);
   }
-
-
-
-
 
   return (
     <>
-      <div className="hand-container">
-        <HandContainer hand={dealerHand} bet={-1} name={"Dealer"}/>
-      </div>
-      <div className="hand-container">
-        <HandContainer hand={playerHand} bet={playerBet} name={"Player"}/>
-        <HandContainer hand={agentHand} bet={agentBet} name={"Agent"}/>
-      </div>
-      <div className="controls-container">
-        <button onClick={() => hit(playerHand, setPlayerHand)} disabled={!playerTurn || playerHand.value > 21}>Hit</button>
-        <button onClick={endRound} disabled={!playerTurn}>Stay</button>
-        <IntegerInput output={setPlayerBetInput} error={playerBetError} isEditable={!playerTurn} />  
-        <button onClick={startRound} disabled={playerTurn || playerBetError != ""}>Bet</button>
+      <div className="game-container">
+        <div className="hand-container">
+          <HandContainer hand={dealerHand} bet={-1} name={"Dealer"}/>
+        </div>
+        <div className="hand-container">
+          <HandContainer hand={playerHand} bet={playerBet} name={"Player"}/>
+          <HandContainer hand={agentHand} bet={agentBet} name={"Agent"}/>
+        </div>
+        <div className="controls-container">
+          <button onClick={() => hit(playerHand, setPlayerHand)} disabled={!playerTurn || playerHand.value > 21}>Hit</button>
+          <button onClick={endRound} disabled={!playerTurn}>Stay</button>
+          <IntegerInput output={setPlayerBetInput} error={playerBetError} isEditable={!playerTurn} />  
+          <button onClick={startRound} disabled={playerTurn || playerBetError != ""}>Bet</button>
+        </div>
       </div>
       <div className="description">
         <p>{agentHand.value}</p>
