@@ -7,7 +7,7 @@ import IntegerInput from './components/IntegerInput.tsx'
 
 const SHOE_SIZE: number = 4; // Number of full decks in a shoe
 const STARTING_CHIPS: number = 100;
-const AGENT_DELAY: number = 500; // How long the agent waits between each action
+const BOT_DELAY: number = 500; // How long the agent and dealer wait between each action
 const AGENT_BET_PCHIPS: number = 0.5; // The percentage of its chips the agent bets every round
 const AGENT_BET_ROUNDUP: number = 10; // The number of chips the agent will round its bet up to, also min bet
 
@@ -40,68 +40,67 @@ export default function App() {
 
   function startRound() {
     // Set player bet
-    setPlayerBetError(validateBet(playerBetInput, playerHand.chips));
-    if (playerBetError == "") { // Valid bet in playerBetInput
-      setPlayerBet(playerBetInput);
-
-      
-      
+    let betError = validateBet(playerBetInput, playerHand.chips);
+    if (betError !== "") { // Invalid bet, break
+      setPlayerBetError(betError);
+      return;
     }
 
-    // Set agent bet
+    // Initialize update hands and bets
+    let updateDealerHand = dealerHand.clone();
+    let updateAgentHand = agentHand.clone();
+    let updatePlayerHand = playerHand.clone();
+    let updatePlayerBet;
+    let updateAgentBet;
+
+    // Valid bet in playerBetInput
+    updatePlayerBet = playerBetInput;
+    updatePlayerHand.betChips(updatePlayerBet);
+
+    // Agent Bet
     // Select min between estimated bet and total agent chips
-    let bet = Math.min(agentHand.chips,
+    updateAgentBet = Math.min(agentHand.chips,
       Math.ceil((agentHand.chips * AGENT_BET_PCHIPS) / AGENT_BET_ROUNDUP) * AGENT_BET_ROUNDUP);
-    let betAgentHand: Hand = agentHand.clone();
-
-    betAgentHand.betChips(bet);
-    setAgentBet(bet);
-    setAgentHand(betAgentHand);
-
-    // Set round as started
-    setRoundStarted(true);
+    updateAgentHand.betChips(updateAgentBet);
 
     // Initial Deal
-    hit(dealerHand, setDealerHand); // 1 card for dealer, 1 hidden
-    
-    hit(agentHand, setAgentHand);
-    hit(agentHand, setAgentHand); // 2 cards for agent
-    
+    updateDealerHand.addCard(deck.popCard()); // 1 card for dealer
+
+    updateAgentHand.addCard(deck.popCard()); // 2 cards for agent
+    updateAgentHand.addCard(deck.popCard());
+
+    updatePlayerHand.addCard(deck.popCard()); // 2 cards for player
+    updatePlayerHand.addCard(deck.popCard()); // 2 cards for player
     
     // Agent makes moves from ./model.json
     // 1 move per AGENT_DELAY milliseconds
-    let dealerValue: number = dealerHand.value;
-    let agentValue: number = agentHand.value;
-    let agentAce: number = agentHand.usableAce ? 1 : 0;
-    enum Action {
-      HIT = 2,
-      STAY = 1,
-      NULL = 0,
-    };
+    
+    // Set the updated hands, bets, and deck
+    setDealerHand(updateDealerHand);
+    setAgentHand(updateAgentHand); // This triggers agent logic, round starts after
+    setPlayerHand(updatePlayerHand);
+    
+    setAgentBet(updateAgentBet);
+    setPlayerBet(updatePlayerBet);
 
-    let agentAction: Action = Action.HIT;
-
-    while (agentAction === Action.HIT) {
-      hit(agentHand, setAgentHand);
-      agentValue = agentHand.value;
-      agentAce = agentHand.usableAce ? 1 : 0;
-
-      agentAction = Action.NULL;
-    }
-
-
+    setDeck(deck);
   }
 
   function hit(hand: Hand, setHand: React.Dispatch<React.SetStateAction<Hand>>) {
     let updateHand: Hand = hand.clone();
-    let newCard = deck.popCard();
 
-    updateHand.addCard(newCard);
+    updateHand.addCard(deck.popCard());
     setHand(updateHand);
     setDeck(deck);
   }
 
   function endRound() {
+    // Set round ended
+    setRoundStarted(false); // This triggers dealer logic
+
+    // Trigger dealer logic
+
+    // Deal
     // Give winnings
 
     // Reset bets to 0
@@ -109,8 +108,7 @@ export default function App() {
     // Get new deck if necessary
     // if deck > 50% used, replace
 
-    // Set round as not started
-    setRoundStarted(false);
+    
 
     // Determine Game Over
 
@@ -133,7 +131,6 @@ export default function App() {
       </div>
       <div className="description">
         <p>{deck.length()}</p>
-        <p>{playerHand.value}</p>
       </div>
     </>
   )

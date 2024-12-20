@@ -22,7 +22,7 @@ export default class Hand {
     // Clone for copying
     clone(): Hand {
         const newHand = new Hand(this.chips);
-        newHand.cards = [...this.cards];
+        newHand.cards = this.cards;
         newHand.usableAce = this.usableAce;
         newHand.value = this.value;
         return newHand;
@@ -63,10 +63,8 @@ export default class Hand {
         }
     }
 
-    betChips(bet: number): Hand {
-        const newHand = this.clone(); // Create a new instance
-        newHand.chips -= bet; // Update chips in the new instance
-        return newHand; // Return the updated instance
+    betChips(bet: number) {
+        this.chips -= bet;
     }
     
 
