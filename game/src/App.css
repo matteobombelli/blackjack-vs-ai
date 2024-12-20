@@ -47,7 +47,7 @@ input {
 }
 
 input:read-only {
-    
+
 }
 
 .integer-input {
@@ -55,5 +55,9 @@ input:read-only {
 }
 
 .error {
+    
+}
+
+.description {
     
 }
