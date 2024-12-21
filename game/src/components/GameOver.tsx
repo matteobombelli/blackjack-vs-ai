@@ -1,5 +1,4 @@
 import '../App.css'
-import Hand from '../objects/Hand';
 
 type GameOverProps = {
     winner: string;
