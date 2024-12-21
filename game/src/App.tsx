@@ -4,8 +4,10 @@ import { Deck } from './objects/Deck.ts'
 import Hand from './objects/Hand.ts'
 import HandContainer from './components/HandContainer.tsx'
 import IntegerInput from './components/IntegerInput.tsx'
+import GameOver from './components/GameOver.tsx'
 
 const SHOE_SIZE: number = 4; // Number of full decks in a shoe
+const SHOE_MIN_CAPACITY = 0.5;
 const STARTING_CHIPS: number = 100;
 const BOT_DELAY: number = 750; // How long the agent and dealer wait between each action
 const AGENT_BET_PCHIPS: number = 0.5; // The percentage of its chips the agent bets every round
@@ -44,6 +46,8 @@ export default function App() {
   const [roundStarted, setRoundStarted] = useState<boolean>(false);
   const [roundOver, setRoundOver] = useState<boolean>(false);
   const [gameOver, setGameOver] = useState<boolean>(false);
+  const [highscore, setHighscore] = useState<number>(0);
+  const [winner, setWinner] = useState<string>("");
 
   // Audio references
   const cardSound = useRef<HTMLAudioElement | null>(null);
@@ -149,6 +153,7 @@ export default function App() {
     }
   }
 
+  // Helper function to compare hands
   // Returns 2 if player hand beats dealer hand
   // Returns 1 if tie
   // Returns 0 otherwise
@@ -265,13 +270,33 @@ export default function App() {
 
     // Set round as over
     setRoundOver(true);
+    setRoundStarted(false);
     playSound(chipSound.current);
+
+    // Capture highscores & update winner
+    if (updateAgentHand.chips > highscore) {
+      setHighscore(updateAgentHand.chips);
+      setWinner("Agent");
+    } else if (updatePlayerHand.chips > highscore) {
+      setHighscore(updatePlayerHand.chips);
+      setWinner("Player");
+    }
+    
+    // Check for GameOver
+    if (updatePlayerHand.chips <= 0 || updateAgentHand.chips <= 0) { // Game over
+      setGameOver(true);
+    }
   }
 
   function resetRound() {
     let updateDealerHand = dealerHand.clone();
     let updateAgentHand = agentHand.clone();
     let updatePlayerHand = playerHand.clone();
+
+    // Check if deck is < SHOE_MIN_CAPACITY
+    if (deck.length() < SHOE_SIZE * 52 * SHOE_MIN_CAPACITY) {
+      setDeck(new Deck(SHOE_SIZE)); // Get new deck
+    }
 
     // Reset cards
     updateDealerHand = new Hand(dealerHand.chips);
@@ -295,6 +320,32 @@ export default function App() {
     playSound(cardSound.current);
   }
 
+  function restartGame() {
+    setDeck(new Deck(SHOE_SIZE));
+    setDealerHand(new Hand(-1));
+    setAgentHand(new Hand(STARTING_CHIPS));
+    setPlayerHand(new Hand(STARTING_CHIPS));
+  
+    setPlayerBet(0);
+    setAgentBet(0);
+    setPlayerBetInput(0);
+  
+    setPlayerMessage("");
+    setAgentMessage("");
+    setHighscore(0);
+    setWinner("");
+  
+    setRoundStarted(false);
+    setRoundOver(false);
+    setGameOver(false);
+    setPlayerTurn(false);
+    setDealerTurn(false);
+    setAgentTurn(false);
+  
+    playSound(cardSound.current);
+  }
+  
+
   return (
     <>
       <div className="game-container">
@@ -310,8 +361,9 @@ export default function App() {
           <button onClick={endRound} disabled={!playerTurn}>Stay</button>
           <IntegerInput output={setPlayerBetInput} error={playerBetError} isEditable={!playerTurn} />  
           <button onClick={startRound} disabled={roundStarted || roundOver}>Bet</button>
-          <button onClick={resetRound} disabled={!roundOver}>Next Round</button>
+          <button onClick={resetRound} disabled={!roundOver || gameOver}>Next Round</button>
         </div>
+        <GameOver winner={winner} highscore={highscore} visible={gameOver} reset={restartGame} />
       </div>
       <div className="description">
       </div>
