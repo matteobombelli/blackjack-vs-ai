@@ -1,13 +1,13 @@
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useRef } from 'react'
 import './App.css'
-import { Card, Deck } from './objects/Deck.ts'
+import { Deck } from './objects/Deck.ts'
 import Hand from './objects/Hand.ts'
 import HandContainer from './components/HandContainer.tsx'
 import IntegerInput from './components/IntegerInput.tsx'
 
 const SHOE_SIZE: number = 4; // Number of full decks in a shoe
 const STARTING_CHIPS: number = 100;
-const BOT_DELAY: number = 1000; // How long the agent and dealer wait between each action
+const BOT_DELAY: number = 750; // How long the agent and dealer wait between each action
 const AGENT_BET_PCHIPS: number = 0.5; // The percentage of its chips the agent bets every round
 const AGENT_BET_ROUNDUP: number = 10; // The number of chips the agent will round its bet up to, also min bet
 
@@ -17,6 +17,10 @@ type ActionTuple = {
   Ace: number;
   Action: number;
 };
+
+function delay(ms: number): Promise<void> {
+  return new Promise(resolve => setTimeout(resolve, ms));
+}  
 
 export default function App() {
   const [deck, setDeck] = useState<Deck>(new Deck(SHOE_SIZE));
@@ -37,10 +41,29 @@ export default function App() {
   const [playerTurn, setPlayerTurn] = useState<boolean>(false);
   const [playerMessage, setPlayerMessage] = useState<string>("");
 
+  const [roundStarted, setRoundStarted] = useState<boolean>(false);
   const [roundOver, setRoundOver] = useState<boolean>(false);
   const [gameOver, setGameOver] = useState<boolean>(false);
 
-  // Function to load ./model.json into modelActions[] on component mount
+  // Audio references
+  const cardSound = useRef<HTMLAudioElement | null>(null);
+  const chipSound = useRef<HTMLAudioElement | null>(null);
+
+  // Load audio on mount
+  useEffect(() => {
+    cardSound.current = new Audio('../cardSound.mp3'); // Replace with actual file path
+    chipSound.current = new Audio('../chipSound.mp3'); // Replace with actual file path
+  }, []);
+
+  // Helper function to play audio
+  const playSound = (audio: HTMLAudioElement | null) => {
+    if (audio) {
+      audio.currentTime = 0; // Reset to start if already playing
+      audio.play().catch((err) => console.error('Error playing sound:', err));
+    }
+  };
+
+  // Load ./model.json into modelActions[] on component mount
   useEffect(() => {
     const loadData = async () => {
       const response = await fetch('../model.json');
@@ -89,7 +112,8 @@ export default function App() {
 
   function hit(hand: Hand, setHand: React.Dispatch<React.SetStateAction<Hand>>) {
     let updateHand: Hand = hand.clone();
-
+    
+    playSound(cardSound.current);
     updateHand.addCard(deck.popCard());
     setHand(updateHand);
     setDeck(deck);
@@ -155,7 +179,7 @@ export default function App() {
     return "Lose";
   }
 
-  function startRound() {
+  async function startRound() {
     // Set player bet
     let betError = validateBet(playerBetInput, playerHand.chips);
     if (betError !== "") { // Invalid bet, break
@@ -163,6 +187,9 @@ export default function App() {
 
       return;
     }
+
+    // Set round started
+    setRoundStarted(true);
 
     // Initialize update hands and bets
     let updateDealerHand = dealerHand.clone();
@@ -191,12 +218,20 @@ export default function App() {
     updatePlayerHand.addCard(deck.popCard()); // 2 cards for player
     
     // Set the updated hands, bets, and deck
-    setDealerHand(updateDealerHand);
-    setAgentHand(updateAgentHand);
-    setPlayerHand(updatePlayerHand);
-    
+    await delay(BOT_DELAY);
+    playSound(chipSound.current);
     setAgentBet(updateAgentBet);
     setPlayerBet(updatePlayerBet);
+    
+    await delay(BOT_DELAY);
+    playSound(cardSound.current);
+    setDealerHand(updateDealerHand);
+    await delay(BOT_DELAY);
+    playSound(cardSound.current);
+    setAgentHand(updateAgentHand);
+    await delay(BOT_DELAY);
+    playSound(cardSound.current);
+    setPlayerHand(updatePlayerHand);
 
     setDeck(deck);
       
@@ -230,6 +265,7 @@ export default function App() {
 
     // Set round as over
     setRoundOver(true);
+    playSound(chipSound.current);
   }
 
   function resetRound() {
@@ -256,6 +292,7 @@ export default function App() {
 
     // Set round as not over
     setRoundOver(false);
+    playSound(cardSound.current);
   }
 
   return (
@@ -272,7 +309,7 @@ export default function App() {
           <button onClick={() => hit(playerHand, setPlayerHand)} disabled={!playerTurn || playerHand.value > 21}>Hit</button>
           <button onClick={endRound} disabled={!playerTurn}>Stay</button>
           <IntegerInput output={setPlayerBetInput} error={playerBetError} isEditable={!playerTurn} />  
-          <button onClick={startRound} disabled={playerTurn || agentTurn || dealerTurn || roundOver}>Bet</button>
+          <button onClick={startRound} disabled={roundStarted || roundOver}>Bet</button>
           <button onClick={resetRound} disabled={!roundOver}>Next Round</button>
         </div>
       </div>
