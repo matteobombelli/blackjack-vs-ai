@@ -28,13 +28,16 @@ export default function App() {
   const [agentBet, setAgentBet] = useState<number>(0);
   const [agentTurn, setAgentTurn] = useState<boolean>(false);
   const [modelActions, setModelActions] = useState<ActionTuple[]>([]);
+  const [agentMessage, setAgentMessage] = useState<string>("");
 
   const [playerHand, setPlayerHand] = useState<Hand>(new Hand(STARTING_CHIPS));
   const [playerBet, setPlayerBet] = useState<number>(0);
   const [playerBetError, setPlayerBetError] = useState<string>("");
   const [playerBetInput, setPlayerBetInput] = useState<number>(playerBet);
   const [playerTurn, setPlayerTurn] = useState<boolean>(false);
+  const [playerMessage, setPlayerMessage] = useState<string>("");
 
+  const [roundOver, setRoundOver] = useState<boolean>(false);
   const [gameOver, setGameOver] = useState<boolean>(false);
 
   // Function to load ./model.json into modelActions[] on component mount
@@ -49,7 +52,7 @@ export default function App() {
   }, []);
 
   // UseEffect to trigger agent actions
-  useEffect(() => { // Perform agent actions
+  useEffect(() => {
     if (agentTurn === true
         && dealerHand.length() === 1
         && agentHand.length() >= 2) { // After initial deal
@@ -64,14 +67,14 @@ export default function App() {
     if (playerHand.value > 21) {
       endRound();
     }
-  }, [playerHand])
+  }, [playerHand]);
 
   // UseEffect to trigger dealer actions
   useEffect(() => {
-    if (dealerTurn === true) {
+    if (dealerTurn) {
       setTimeout(performDealerAction, BOT_DELAY);
     }
-  }, [dealerTurn, dealerHand])
+  }, [dealerTurn, dealerHand]);
 
   function validateBet(bet: number, chips: number): string {
     if (bet > Number.MAX_SAFE_INTEGER) // Check for overflow
@@ -118,7 +121,38 @@ export default function App() {
       hit(dealerHand, setDealerHand);
     } else { // value >= 16, end turn
       setDealerTurn(false);
+      scoreRound();
     }
+  }
+
+  // Returns 2 if player hand beats dealer hand
+  // Returns 1 if tie
+  // Returns 0 otherwise
+  function compareHands(player: number, dealer: number): number {
+    if (player > 21) { // Case 1: player bust, *
+      return 0;
+    }
+    if (player <= 21 && dealer > 21) { // Case 2: player no bust, dealer bust
+      return 2;
+    }
+    if (player <= 21 && dealer <= 21 && player > dealer) { // Case 3: no busts, player > dealer
+      return 2;
+    }
+    if (player <= 21 && dealer <= 21 && dealer > player) { // Case 4: no busts, player < dealer
+      return 0;
+    }
+    // Player == dealer
+    return 1;
+  }
+
+  function resultMessage(winValue: number): string {
+    switch (winValue) {
+      case 2:
+        return "Win!";
+      case 1:
+        return "Push";
+    }
+    return "Lose";
   }
 
   function startRound() {
@@ -126,6 +160,7 @@ export default function App() {
     let betError = validateBet(playerBetInput, playerHand.chips);
     if (betError !== "") { // Invalid bet, break
       setPlayerBetError(betError);
+
       return;
     }
 
@@ -174,26 +209,75 @@ export default function App() {
     setDealerTurn(true);
   }
 
+  function scoreRound() {
+    // Reward player on win
+    let updatePlayerHand = playerHand.clone();
+    let playerWinValue = compareHands(playerHand.value, dealerHand.value);
+    updatePlayerHand.winChips(playerBet * playerWinValue);
+
+    // Reward agent on win
+    let updateAgentHand = agentHand.clone();
+    let agentWinValue = compareHands(agentHand.value, dealerHand.value);
+    updateAgentHand.winChips(agentBet * agentWinValue);
+
+    // Display messages
+    setPlayerMessage(resultMessage(playerWinValue));
+    setAgentMessage(resultMessage(agentWinValue));
+
+    // Set hands (new chips)
+    setPlayerHand(updatePlayerHand);
+    setAgentHand(updateAgentHand);
+
+    // Set round as over
+    setRoundOver(true);
+  }
+
+  function resetRound() {
+    let updateDealerHand = dealerHand.clone();
+    let updateAgentHand = agentHand.clone();
+    let updatePlayerHand = playerHand.clone();
+
+    // Reset cards
+    updateDealerHand = new Hand(dealerHand.chips);
+    updateAgentHand = new Hand(agentHand.chips);
+    updatePlayerHand = new Hand(playerHand.chips);;
+
+    setDealerHand(updateDealerHand);
+    setAgentHand(updateAgentHand);
+    setPlayerHand(updatePlayerHand);
+
+    // Reset bets
+    setPlayerBet(0);
+    setAgentBet(0);
+
+    // Reset Messages
+    setPlayerMessage("");
+    setAgentMessage("");
+
+    // Set round as not over
+    setRoundOver(false);
+  }
+
   return (
     <>
       <div className="game-container">
         <div className="hand-container">
-          <HandContainer hand={dealerHand} bet={-1} name={"Dealer"}/>
+          <HandContainer hand={dealerHand} bet={-1} name={"Dealer"} message={""}/>
         </div>
         <div className="hand-container">
-          <HandContainer hand={playerHand} bet={playerBet} name={"Player"}/>
-          <HandContainer hand={agentHand} bet={agentBet} name={"Agent"}/>
+          <HandContainer hand={playerHand} bet={playerBet} name={"Player"} message={playerMessage} />
+          <HandContainer hand={agentHand} bet={agentBet} name={"Agent"} message={agentMessage} />
         </div>
         <div className="controls-container">
           <button onClick={() => hit(playerHand, setPlayerHand)} disabled={!playerTurn || playerHand.value > 21}>Hit</button>
           <button onClick={endRound} disabled={!playerTurn}>Stay</button>
           <IntegerInput output={setPlayerBetInput} error={playerBetError} isEditable={!playerTurn} />  
-          <button onClick={startRound} disabled={playerTurn || playerBetError != ""}>Bet</button>
+          <button onClick={startRound} disabled={playerTurn || agentTurn || dealerTurn || roundOver}>Bet</button>
+          <button onClick={resetRound} disabled={!roundOver}>Next Round</button>
         </div>
       </div>
       <div className="description">
-        <p>{agentHand.value}</p>
       </div>
     </>
-  )
+  );
 }

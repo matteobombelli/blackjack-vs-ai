@@ -7,9 +7,10 @@ type HandContainerProps = {
     hand: Hand;
     bet: number;
     name: string;
+    message: string;
 };
 
-export default function HandContainer( { hand, bet, name }: HandContainerProps) {
+export default function HandContainer( { hand, bet, name, message }: HandContainerProps) {
     return(
     <>
         <div className="hand">
@@ -21,6 +22,7 @@ export default function HandContainer( { hand, bet, name }: HandContainerProps) 
             { hand.chips == -1 ? null : <ChipBalance chipCount={hand.chips} /> }
             <br />
             <h1>{name}</h1>
+            <p>{message}</p>
         </div>
     </>
     );

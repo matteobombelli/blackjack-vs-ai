@@ -22,7 +22,7 @@ export default class Hand {
     // Clone for copying
     clone(): Hand {
         const newHand = new Hand(this.chips);
-        newHand.cards = this.cards;
+        newHand.cards = [...this.cards];
         newHand.usableAce = this.usableAce;
         newHand.value = this.value;
         return newHand;
@@ -68,10 +68,8 @@ export default class Hand {
     }
     
 
-    winChips(winnings: number): Hand {
-        const newHand = this.clone(); // Create a new instance
-        newHand.chips += winnings; // Update chips in the new instance
-        return newHand; // Return the updated instance
+    winChips(winnings: number) {
+        this.chips += winnings;
     }
 
     length() { // Returns length without cardBack cards
@@ -80,12 +78,5 @@ export default class Hand {
             && card.suit != this.cardBack.suit 
             && card.value != this.cardBack.value);
         return nonEmptyCards.length;
-    }
-    
-
-    // Resets hand cards and value
-    resetCards() {
-        this.cards = [];
-        this.value = 0;
     }
 }
