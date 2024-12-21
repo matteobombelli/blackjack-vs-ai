@@ -359,7 +359,7 @@ export default function App() {
         <div className="controls-container">
           <button onClick={() => hit(playerHand, setPlayerHand)} disabled={!playerTurn || playerHand.value > 21}>Hit</button>
           <button onClick={endRound} disabled={!playerTurn}>Stay</button>
-          <IntegerInput output={setPlayerBetInput} error={playerBetError} isEditable={!playerTurn} />  
+          <IntegerInput output={setPlayerBetInput} error={playerBetError} isEditable={!playerTurn} reset={gameOver} />  
           <button onClick={startRound} disabled={roundStarted || roundOver}>Bet</button>
           <button onClick={resetRound} disabled={!roundOver || gameOver}>Next Round</button>
         </div>

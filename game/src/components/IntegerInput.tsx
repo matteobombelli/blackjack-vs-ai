@@ -1,14 +1,22 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import '../App.css'
 
 type IntegerInputProps = {
   output: React.Dispatch<React.SetStateAction<number>>;
   error: string;
   isEditable: boolean;
+  reset: boolean;
 }
 
-export default function IntegerInput({ output, error, isEditable }: IntegerInputProps) {
+export default function IntegerInput({ output, error, isEditable, reset }: IntegerInputProps) {
   const [value, setValue] = useState<string>("");
+
+    // Reset the value when reset is true
+    useEffect(() => {
+      if (reset) {
+        setValue(""); // Clear input value
+      }
+    }, [reset]);
 
   // Parse value to IntString
   function handleValueChange(e: React.ChangeEvent<HTMLInputElement>) {
