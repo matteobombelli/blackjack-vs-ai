@@ -116,11 +116,12 @@ export default function App() {
 
   function hit(hand: Hand, setHand: React.Dispatch<React.SetStateAction<Hand>>) {
     let updateHand: Hand = hand.clone();
+    let updateDeck: Deck = deck.clone();
     
     playSound(cardSound.current);
-    updateHand.addCard(deck.popCard());
+    updateHand.addCard(updateDeck.popCard());
     setHand(updateHand);
-    setDeck(deck);
+    setDeck(updateDeck);
   }
 
   function performAgentAction() {
@@ -197,11 +198,12 @@ export default function App() {
     setRoundStarted(true);
 
     // Initialize update hands and bets
-    let updateDealerHand = dealerHand.clone();
-    let updateAgentHand = agentHand.clone();
-    let updatePlayerHand = playerHand.clone();
-    let updatePlayerBet;
-    let updateAgentBet;
+    let updateDeck: Deck = deck.clone()
+    let updateDealerHand: Hand = dealerHand.clone();
+    let updateAgentHand: Hand = agentHand.clone();
+    let updatePlayerHand: Hand = playerHand.clone();
+    let updatePlayerBet: number;
+    let updateAgentBet: number;
 
     // Valid bet in playerBetInput
     updatePlayerBet = playerBetInput;
@@ -214,13 +216,13 @@ export default function App() {
     updateAgentHand.betChips(updateAgentBet);
 
     // Initial Deal
-    updateDealerHand.addCard(deck.popCard()); // 1 card for dealer
+    updateDealerHand.addCard(updateDeck.popCard()); // 1 card for dealer
 
-    updateAgentHand.addCard(deck.popCard()); // 2 cards for agent
-    updateAgentHand.addCard(deck.popCard());
+    updateAgentHand.addCard(updateDeck.popCard()); // 2 cards for agent
+    updateAgentHand.addCard(updateDeck.popCard());
 
-    updatePlayerHand.addCard(deck.popCard()); // 2 cards for player
-    updatePlayerHand.addCard(deck.popCard()); // 2 cards for player
+    updatePlayerHand.addCard(updateDeck.popCard()); // 2 cards for player
+    updatePlayerHand.addCard(updateDeck.popCard()); // 2 cards for player
     
     // Set the updated hands, bets, and deck
     await delay(BOT_DELAY);
@@ -238,7 +240,7 @@ export default function App() {
     playSound(cardSound.current);
     setPlayerHand(updatePlayerHand);
 
-    setDeck(deck);
+    setDeck(updateDeck);
       
     // Start agent's turn
     setAgentTurn(true);
@@ -251,7 +253,7 @@ export default function App() {
 
   function scoreRound() {
     // Reward player on win
-    let updatePlayerHand = playerHand.clone();
+    let updatePlayerHand: Hand = playerHand.clone();
     let playerWinValue = compareHands(playerHand.value, dealerHand.value);
     updatePlayerHand.winChips(playerBet * playerWinValue);
 
@@ -289,19 +291,15 @@ export default function App() {
   }
 
   function resetRound() {
-    let updateDealerHand = dealerHand.clone();
-    let updateAgentHand = agentHand.clone();
-    let updatePlayerHand = playerHand.clone();
-
     // Check if deck is < SHOE_MIN_CAPACITY
     if (deck.length() < SHOE_SIZE * 52 * SHOE_MIN_CAPACITY) {
       setDeck(new Deck(SHOE_SIZE)); // Get new deck
     }
 
     // Reset cards
-    updateDealerHand = new Hand(dealerHand.chips);
-    updateAgentHand = new Hand(agentHand.chips);
-    updatePlayerHand = new Hand(playerHand.chips);;
+    let updateDealerHand: Hand = new Hand(dealerHand.chips);
+    let updateAgentHand: Hand = new Hand(agentHand.chips);
+    let updatePlayerHand: Hand = new Hand(playerHand.chips);
 
     setDealerHand(updateDealerHand);
     setAgentHand(updateAgentHand);
@@ -344,7 +342,6 @@ export default function App() {
   
     playSound(cardSound.current);
   }
-  
 
   return (
     <>

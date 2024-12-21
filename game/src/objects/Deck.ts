@@ -15,6 +15,13 @@ export class Deck {
         this.deck = shuffle(this.createDeck(size))
     }
 
+    // For copying
+    clone(): Deck {
+        let newDeck: Deck = new Deck(0);
+        newDeck.deck = [...this.deck];
+        return newDeck;
+    }
+
     // Populates a deck with size = # of full standard decks
     createDeck(size: number): Card[] {
         const suits = ['clubs', 'diamonds', 'hearts', 'spades'];
