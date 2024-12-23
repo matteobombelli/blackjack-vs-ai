@@ -91,17 +91,21 @@ export default function App() {
 
   // UseEffect to end round on player bust
   useEffect(() => {
-    if (playerHand.value > 21) {
+    if (playerHand.value > 21
+      && playerTurn
+    ) {
       endRound();
     }
   }, [playerHand]);
 
   // UseEffect to trigger dealer actions
   useEffect(() => {
-    if (dealerTurn) {
+    if (dealerTurn
+      && !playerTurn
+    ) {
       setTimeout(performDealerAction, BOT_DELAY);
     }
-  }, [dealerTurn, dealerHand]);
+  }, [dealerTurn, playerTurn, dealerHand]);
 
   function validateBet(bet: number, chips: number): string {
     if (bet > Number.MAX_SAFE_INTEGER) // Check for overflow
@@ -222,12 +226,13 @@ export default function App() {
   }
 
   useEffect(() => {
-    if (playerBet != 0
+    if (roundStarted
+      && playerBet != 0
       && agentBet != 0
     ) {
       startRound();
     }
-  }, [agentBet, playerBet]);
+  }, [agentBet, playerBet, roundStarted]);
 
   async function startRound() {
 
