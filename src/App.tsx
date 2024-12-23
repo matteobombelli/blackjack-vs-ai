@@ -55,8 +55,8 @@ export default function App() {
 
   // Load audio on mount
   useEffect(() => {
-    cardSound.current = new Audio('../cardSound.mp3'); // Replace with actual file path
-    chipSound.current = new Audio('../chipSound.mp3'); // Replace with actual file path
+    cardSound.current = new Audio(`${import.meta.env.BASE_URL}public/cardSound.mp3`); // Replace with actual file path
+    chipSound.current = new Audio(`${import.meta.env.BASE_URL}public/chipSound.mp3`); // Replace with actual file path
   }, []);
 
   // Helper function to play audio
@@ -70,7 +70,7 @@ export default function App() {
   // Load ./model.json into modelActions[] on component mount
   useEffect(() => {
     const loadData = async () => {
-      const response = await fetch('../model.json');
+      const response = await fetch(`${import.meta.env.BASE_URL}public/model.json`);
       const data: ActionTuple[] = await response.json();
       setModelActions(data);
     };
