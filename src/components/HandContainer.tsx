@@ -15,12 +15,11 @@ export default function HandContainer( { hand, bet, name, message }: HandContain
     <>
         <div className="hand">
             { bet == -1 ? null : <ChipBalance chipCount={bet} /> }
-            <br />
-            { hand.cards.map((card, index) => 
+            <div className="cards">
+                { hand.cards.map((card, index) => 
                 <CardImage key={`${index}`} card={card} />)}
-            <br />
+            </div>
             { hand.chips == -1 ? null : <ChipBalance chipCount={hand.chips} /> }
-            <br />
             <h1>{name}</h1>
             <p>{message}</p>
         </div>

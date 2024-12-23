@@ -1,63 +1,180 @@
-.hand-container {
-
+/* Variables */
+:root {
+    --primary-color: #A8DADC;
+    --secondary-color: #505050;
+    --background-color: #181818;
+    --error-color: #D06060;
+    --font-size-base: 24px;
+    --margin-base: 1rem;
+    --padding-base: 0.5rem;
 }
 
-.hand {
-
+/* General */
+body {
+    background-color: var(--background-color);
+    color: var(--primary-color);
+    font-size: var(--font-size-base);
+    margin: 0;
+    display: flex;
+    justify-content: center;
+    align-items: center;
 }
 
-.hand h1 {
-
-}
-
-.card {
-    height: 500px;
-}
-
-.chips {
-
-}
-
-.chips img {
-    height: 100px;
-}
-
-.chips p {
-
-}
-
-.controls-container {
-    
-}
-
-button {
-
-}
-
-button:hover {
-
-}
-
-button:disabled {
-
+* {
+    user-select: none;
 }
 
 input {
-
+    user-select: auto;
 }
 
-input:read-only {
+/* Containers */
+.game {
+    width: 100vw;
+    height: 100vh;
+    display: flex;
+    flex-direction: column;
+}
 
+.players,
+.dealer {
+    height: 35%;
+    display: flex;
+    flex-direction: row;
+    justify-content: center;
+    align-items: center;
+}
+
+.hand {
+    height: 100%;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+}
+
+.cards {
+    height: 60%;
+    display: flex;
+    flex-direction: row;
+}
+
+.chips {
+    height: 10%;
+    display: flex;
+    align-items: center;
+}
+
+.controls {
+    height: 12%;
+    width: 100%;
+    display: flex;
+    align-items: flex-end;
 }
 
 .integer-input {
-
-}
-
-.error {
-    
+    display: flex;
+    flex-direction: column;
 }
 
 .description {
-    
+    width: 90vw;
+    margin-top: calc(5 * var(--margin-base));
+}
+
+/* Controls */
+button {
+    margin: var(--margin-base);
+    margin-bottom: calc(0.2 * var(--margin-base));
+    border: 2px solid var(--primary-color);
+    border-radius: calc(0.2 * var(--font-size-base));
+    padding: var(--padding-base);
+    background-color: var(--secondary-color);
+    color: var(--primary-color);
+    height: 100%;
+    flex-grow: 1;
+    font-size: var(--font-size-base);
+    font-weight: bolder;
+    transition: background-color 0.3s ease, color 0.3s ease, opacity 0.3s ease;
+}
+
+button:hover {
+    background-color: var(--primary-color);
+    color: var(--background-color);
+}
+
+button:disabled,
+input:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+    pointer-events: none;
+}
+
+input {
+    margin-bottom: calc(0.4 * var(--margin-base));
+    background-color: var(--background-color);
+    color: var(--primary-color);
+    border: 2px solid var(--primary-color);
+    border-radius: calc(0.2 * var(--font-size-base));
+    padding: var(--padding-base);
+    height: 50%;
+    font-size: calc(2 * var(--font-size-base));
+    font-weight: bolder;
+    box-sizing: border-box;
+    transition: border-color 0.3s ease, color 0.3s ease, background-color 0.3s ease;
+}
+
+input:focus {
+    border-color: var(--secondary-color);
+    color: var(--primary-color);
+    outline: none;
+    background-color: var(--background-color);
+}
+
+.error {
+    margin: calc(0.2 * var(--margin-base));
+    color: var(--error-color);
+    height: 20%;
+    flex-shrink: 1;
+    font-size: calc(0.7 * var(--font-size-base));
+    text-align: right;
+}
+
+/* Cards */
+.card {
+    margin: calc(0.5 * var(--margin-base));
+    margin-top: calc(1.5 * var(--margin-base));
+    height: 40%;
+    flex-grow: 1;
+    transition: margin-bottom 0.5s ease, margin-top 0.5s ease;
+}
+
+.card:hover {
+    margin-top: 0;
+    margin-bottom: calc(2 * var(--margin-base));
+}
+
+/* Chips */
+.chips img,
+.chips p {
+    margin: 0;
+    padding: var(--padding-base);
+    border: var(--padding-base) solid var(--secondary-color);
+    background-color: var(--secondary-color);
+    max-height: var(--font-size-base);
+    display: flex;
+    align-items: center;
+}
+
+.chips img {
+    border-top-left-radius: calc(0.2 * var(--font-size-base));
+    border-bottom-left-radius: calc(0.2 * var(--font-size-base));
+}
+
+.chips p {
+    border-top-right-radius: calc(0.2 * var(--font-size-base));
+    border-bottom-right-radius: calc(0.2 * var(--font-size-base));
+    color: var(--primary-color);
+    font-size: var(--font-size-base);
+    font-weight: bolder;
 }

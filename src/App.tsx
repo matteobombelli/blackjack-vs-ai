@@ -185,7 +185,7 @@ export default function App() {
     return "Lose";
   }
 
-  async function startRound() {
+  async function setBets() {
     // Set player bet
     let betError = validateBet(playerBetInput, playerHand.chips);
     if (betError !== "") { // Invalid bet, break
@@ -197,13 +197,10 @@ export default function App() {
     // Set round started
     setRoundStarted(true);
 
-    // Initialize update hands and bets
-    let updateDeck: Deck = deck.clone()
-    let updateDealerHand: Hand = dealerHand.clone();
-    let updateAgentHand: Hand = agentHand.clone();
-    let updatePlayerHand: Hand = playerHand.clone();
     let updatePlayerBet: number;
     let updateAgentBet: number;
+    let updateAgentHand: Hand = agentHand.clone();
+    let updatePlayerHand: Hand = playerHand.clone();
 
     // Valid bet in playerBetInput
     updatePlayerBet = playerBetInput;
@@ -215,6 +212,31 @@ export default function App() {
       Math.ceil((agentHand.chips * AGENT_BET_PCHIPS) / AGENT_BET_ROUNDUP) * AGENT_BET_ROUNDUP);
     updateAgentHand.betChips(updateAgentBet);
 
+    // Set the updated hands, bets, and deck
+    await delay(BOT_DELAY);
+    playSound(chipSound.current);
+    setAgentBet(updateAgentBet);
+    setAgentHand(updateAgentHand);
+    setPlayerBet(updatePlayerBet);
+    setPlayerHand(updatePlayerHand);
+  }
+
+  useEffect(() => {
+    if (playerBet != 0
+      && agentBet != 0
+    ) {
+      startRound();
+    }
+  }, [agentBet, playerBet]);
+
+  async function startRound() {
+
+    // Initialize update hands and bets
+    let updateDeck: Deck = deck.clone()
+    let updateDealerHand: Hand = dealerHand.clone();
+    let updateAgentHand: Hand = agentHand.clone();
+    let updatePlayerHand: Hand = playerHand.clone();
+
     // Initial Deal
     updateDealerHand.addCard(updateDeck.popCard()); // 1 card for dealer
 
@@ -223,12 +245,6 @@ export default function App() {
 
     updatePlayerHand.addCard(updateDeck.popCard()); // 2 cards for player
     updatePlayerHand.addCard(updateDeck.popCard()); // 2 cards for player
-    
-    // Set the updated hands, bets, and deck
-    await delay(BOT_DELAY);
-    playSound(chipSound.current);
-    setAgentBet(updateAgentBet);
-    setPlayerBet(updatePlayerBet);
     
     await delay(BOT_DELAY);
     playSound(cardSound.current);
@@ -345,24 +361,28 @@ export default function App() {
 
   return (
     <>
-      <div className="game-container">
-        <div className="hand-container">
+      <div className="game">
+        <div className="dealer">
           <HandContainer hand={dealerHand} bet={-1} name={"Dealer"} message={""}/>
         </div>
-        <div className="hand-container">
+        <div className="players">
           <HandContainer hand={playerHand} bet={playerBet} name={"Player"} message={playerMessage} />
           <HandContainer hand={agentHand} bet={agentBet} name={"Agent"} message={agentMessage} />
         </div>
-        <div className="controls-container">
+        <div className="controls">
           <button onClick={() => hit(playerHand, setPlayerHand)} disabled={!playerTurn || playerHand.value > 21}>Hit</button>
           <button onClick={endRound} disabled={!playerTurn}>Stay</button>
           <IntegerInput output={setPlayerBetInput} error={playerBetError} isEditable={!playerTurn} reset={gameOver} />  
-          <button onClick={startRound} disabled={roundStarted || roundOver}>Bet</button>
+          <button onClick={setBets} disabled={roundStarted || roundOver}>Bet</button>
           <button onClick={resetRound} disabled={!roundOver || gameOver}>Next Round</button>
         </div>
         <GameOver winner={winner} highscore={highscore} visible={gameOver} reset={restartGame} />
       </div>
       <div className="description">
+        <h1>How to Play</h1>
+        <p></p>
+        <h1>About</h1>
+        <p></p>
       </div>
     </>
   );
