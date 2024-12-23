@@ -8,7 +8,7 @@ export default function ChipBalance({ chipCount }: ChipBalanceProps) {
     return(
         <>
             <div className="chips">
-                <img src={`${import.meta.env.BASE_URL}public/chips.png`} alt="" />
+                <img src={`${import.meta.env.BASE_URL}chips.png`} alt="" />
                 <p>{ chipCount }</p>
             </div>
         </>
