@@ -6,6 +6,6 @@ type CardImageProps = {
 };
 
 export default function CardImage({ card }: CardImageProps) {
-    let target: string = "../cards/" + card.rank + "_of_" + card.suit + ".png";
-    return(<img className="card" src={target} alt=""/>);
+    const target = `${import.meta.env.BASE_URL}cards/${card.rank}_of_${card.suit}.png`;
+    return <img className="card" src={target} alt="" />;
 }
