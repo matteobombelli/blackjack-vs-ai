@@ -11,18 +11,17 @@
 
 /* General */
 * {
-    margin: var(--margin-base);
+    margin: 0;
+    padding: 0;
     user-select: none;
 }
 
-body {
+html, body {
     background-color: var(--background-color);
     color: var(--primary-color);
     font-size: var(--font-size-base);
-    margin: 0;
-    display: flex;
-    justify-content: center;
-    align-items: center;
+    display: inline-block;
+    text-align: center;
 }
 
 input {
@@ -31,71 +30,78 @@ input {
 
 /* Containers */
 .game {
-    margin: 0;
-    padding: 0;
-    width: 98vw;
+    width: 95vw;
     height: 98vh;
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-}
-
-.players, .dealer {
-    margin: 0;
-    display: flex;
-    flex-direction: row;
-    justify-content: space-between;
-    align-items: stretch;
-    height: 40%;
-}
-
-.hand {
-    margin: 0;
     display: flex;
     flex-direction: column;
     justify-content: center;
     align-items: center;
+    gap: 0;
+}
+
+.players, .dealer {
+    display: flex;
+    flex-direction: row;
+    justify-content: space-around;
+    align-items: center;
+    width: 90%;
+    height: 40%;
+}
+
+.dealer {
+    height: 40%;
+}
+
+.players {
+    height: 50%;
+}
+
+.hand {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 0;
     height: 100%;
-    flex-grow: 1;
+    width: 45%;
 }
 
 .cards {
-    margin: 0;
     display: flex;
     flex-direction: row;
-    justify-content: left;
+    justify-content: flex-start;
     align-items: start;
-    height: 60%;
+    gap: calc(0.5 * var(--margin-base));
+    height: 50%;
+    width: 100%;
 }
 
 .chips {
+    border: var(--padding-base) solid var(--secondary-color);
+    border-radius: calc(0.2 * var(--font-size-base));
     display: flex;
     align-items: center;
-    height: 6%;
+    height: 5%;
+    width: min-content;
 }
 
 .hand h1{
-    margin: 0;
+    margin: calc(0.5 * var(--margin-base));
+    padding: calc(0.2 * var(--padding-base));
+    border-radius: calc(0.2 * var(--font-size-base));
     font-size: var(--font-size-base);
 }
 
-.hand p {
-    margin: 0;
-}
-
 .controls {
-    height: 12%;
-    width: 100%;
     display: flex;
+    flex-direction: row;
     justify-content: space-around;
     align-items: center;
-    
+    height: 10%;
+    width: 100%;
 }
 
 .integer-input {
-    display: flex;
-    flex-direction: column;
-    margin-top: 1rem;
+    display: inline-block;
 }
 
 .description {
@@ -107,8 +113,7 @@ input {
 
 /* Controls */
 button {
-    margin: var(--margin-base);
-    margin-bottom: calc(0.2 * var(--margin-base));
+    margin: calc(0.2 * var(--margin-base)) var(--margin-base);
     border: 2px solid var(--primary-color);
     border-radius: calc(0.2 * var(--font-size-base));
     padding: var(--padding-base);
@@ -134,16 +139,14 @@ input:disabled {
 }
 
 input {
-    margin-bottom: calc(0.4 * var(--margin-base));
-    background-color: var(--background-color);
-    color: var(--primary-color);
+    margin-top: calc(0.2 * var(--margin-base));
     border: 2px solid var(--primary-color);
     border-radius: calc(0.2 * var(--font-size-base));
     padding: var(--padding-base);
-    height: 50%;
-    font-size: calc(2 * var(--font-size-base));
+    background-color: var(--background-color);
+    color: var(--primary-color);
+    font-size: calc(1 * var(--font-size-base));
     font-weight: bolder;
-    box-sizing: border-box;
     transition: border-color 0.3s ease, color 0.3s ease, background-color 0.3s ease;
 }
 
@@ -155,19 +158,17 @@ input:focus {
 }
 
 .error {
-    margin: calc(0.2 * var(--margin-base));
     color: var(--error-color);
-    height: 20%;
-    flex-shrink: 1;
-    font-size: calc(0.7 * var(--font-size-base));
+    font-size: calc(0.75 * var(--font-size-base));
     text-align: right;
+    min-height: calc(1 * var(--font-size-base));
+    visibility: visible;
 }
 
 /* Cards */
 .card {
-    margin: calc(0.5 * var(--margin-base));
+    margin: calc(0.5 * var(--margin-base)) 0;
     height: 90%;
-    flex-grow: 1;
     transition: margin-bottom 0.5s ease, margin-top 0.5s ease;
 }
 
@@ -179,23 +180,15 @@ input:focus {
 /* Chips */
 .chips img,
 .chips p {
-    margin: 0;
-    padding: var(--padding-base);
-    border: var(--padding-base) solid var(--secondary-color);
     background-color: var(--secondary-color);
     height: 100%;
     display: flex;
     align-items: center;
 }
 
-.chips img {
-    border-top-left-radius: calc(0.2 * var(--font-size-base));
-    border-bottom-left-radius: calc(0.2 * var(--font-size-base));
-}
-
 .chips p {
-    border-top-right-radius: calc(0.2 * var(--font-size-base));
-    border-bottom-right-radius: calc(0.2 * var(--font-size-base));
+    border-radius: calc(0.2 * var(--font-size-base));
+    padding: var(--padding-base);
     color: var(--primary-color);
     font-size: var(--font-size-base);
     font-weight: bolder;

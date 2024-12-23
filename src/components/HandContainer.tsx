@@ -8,9 +8,10 @@ type HandContainerProps = {
     bet: number;
     name: string;
     message: string;
+    isActive: boolean;
 };
 
-export default function HandContainer( { hand, bet, name, message }: HandContainerProps) {
+export default function HandContainer( { hand, bet, name, message, isActive }: HandContainerProps) {
     return(
     <>
         <div className="hand">
@@ -20,7 +21,7 @@ export default function HandContainer( { hand, bet, name, message }: HandContain
                 <CardImage key={`${index}`} card={card} />)}
             </div>
             { hand.chips == -1 ? null : <ChipBalance chipCount={hand.chips} /> }
-            <h1>{name}</h1>
+            <h1 style={{backgroundColor: isActive ? "var(--secondary-color)" : "var(--background-color)"}}>{name}</h1>
             <p>{message}</p>
         </div>
     </>

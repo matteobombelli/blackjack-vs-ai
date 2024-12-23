@@ -368,11 +368,11 @@ export default function App() {
     <>
       <div className="game">
         <div className="dealer">
-          <HandContainer hand={dealerHand} bet={-1} name={"Dealer"} message={""}/>
+          <HandContainer hand={dealerHand} bet={-1} name={"Dealer"} message={""} isActive={dealerTurn} />
         </div>
         <div className="players">
-          <HandContainer hand={playerHand} bet={playerBet} name={"Player"} message={playerMessage} />
-          <HandContainer hand={agentHand} bet={agentBet} name={"Agent"} message={agentMessage} />
+          <HandContainer hand={playerHand} bet={playerBet} name={"Player"} message={playerMessage} isActive={playerTurn} />
+          <HandContainer hand={agentHand} bet={agentBet} name={"Agent"} message={agentMessage} isActive={agentTurn} />
         </div>
         <div className="controls">
           <button onClick={() => hit(playerHand, setPlayerHand)} disabled={!playerTurn || playerHand.value > 21}>Hit</button>
