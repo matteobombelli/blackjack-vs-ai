@@ -266,6 +266,7 @@ export default function App() {
     setDeck(updateDeck);
       
     // Start agent's turn
+    await delay(BOT_DELAY);
     setAgentTurn(true);
   }
 
@@ -383,13 +384,30 @@ export default function App() {
           <button onClick={setBets} disabled={roundStarted || roundOver}>Bet</button>
           <button onClick={resetRound} disabled={!roundOver || gameOver}>Next Round</button>
         </div>
-        <GameOver winner={winner} highscore={highscore} visible={gameOver} reset={restartGame} />
+        <GameOver winner={winner} highscore={highscore} lastStanding={playerHand.chips === 0 ? "Agent" : "Player"} visible={gameOver} reset={restartGame} />
       </div>
       <div className="description">
         <h1>How to Play</h1>
-        <p></p>
+        <h3>Game Rules</h3>
+        <ul>
+          <li>Game ends when either you or the agent runs out of chips</li>
+          <li>Highest chips and last standing are both recorded</li>
+          <li>Highscores are only recorded after the first hand</li>
+          <li>Agent always bets {AGENT_BET_PCHIPS * 100}% of its chips rounded up to the nearest {AGENT_BET_ROUNDUP}</li>
+        </ul>
+        <h3>Blackjack Rules</h3>
+        <ul>
+          <li>Shoe is {SHOE_SIZE} decks</li>
+          <li>Shoe gets reset at {SHOE_MIN_CAPACITY * 100}% capacity</li>
+          <li>Blackjack pays 1:1</li>
+          <li>Dealer stays at 16 or higher</li>
+        </ul>
         <h1>About</h1>
-        <p></p>
+        <p>The agent is a monte-carlo rewarded statistical model, it was trained over 250000 episodes and achieves a winrate of <strong>43.3%</strong>.
+        A random strategy achieves a winrate of 28%.</p>
+        <p>Heatmaps of the model's strategy and details on the training process can be found 
+          <a href="https://github.com/matteobombelli/blackjack-vs-ai">on the repository page</a>.</p>
+        <p>Can you use advanced card-counting strategy (or sheer luck) to beat the model?</p>
       </div>
     </>
   );
