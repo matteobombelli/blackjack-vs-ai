@@ -406,7 +406,7 @@ export default function App() {
         <p>The agent is a monte-carlo rewarded statistical model, it was trained over 250000 episodes and achieves a winrate of <strong>43.3%</strong>.
         A random strategy achieves a winrate of 28%.</p>
         <p>Heatmaps of the model's strategy and details on the training process can be found 
-          <a href="https://github.com/matteobombelli/blackjack-vs-ai">on the repository page</a>.</p>
+          &nbsp;<a href="https://github.com/matteobombelli/blackjack-vs-ai">on the repository page</a>.</p>
         <p>Can you use advanced card-counting strategy (or sheer luck) to beat the model?</p>
       </div>
     </>
