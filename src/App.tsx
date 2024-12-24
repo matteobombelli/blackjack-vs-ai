@@ -198,6 +198,9 @@ export default function App() {
       return;
     }
 
+    // Clear error
+    setPlayerBetError("");
+
     // Set round started
     setRoundStarted(true);
 
@@ -235,7 +238,6 @@ export default function App() {
   }, [agentBet, playerBet, roundStarted]);
 
   async function startRound() {
-
     // Initialize update hands and bets
     let updateDeck: Deck = deck.clone()
     let updateDealerHand: Hand = dealerHand.clone();
@@ -377,7 +379,7 @@ export default function App() {
         <div className="controls">
           <button onClick={() => hit(playerHand, setPlayerHand)} disabled={!playerTurn || playerHand.value > 21}>Hit</button>
           <button onClick={endRound} disabled={!playerTurn}>Stay</button>
-          <IntegerInput output={setPlayerBetInput} error={playerBetError} isEditable={!playerTurn} reset={gameOver} />  
+          <IntegerInput output={setPlayerBetInput} error={playerBetError} isEditable={!roundStarted && !roundOver} reset={gameOver} />  
           <button onClick={setBets} disabled={roundStarted || roundOver}>Bet</button>
           <button onClick={resetRound} disabled={!roundOver || gameOver}>Next Round</button>
         </div>

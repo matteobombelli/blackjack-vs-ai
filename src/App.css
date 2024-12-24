@@ -28,7 +28,7 @@ input {
     user-select: auto;
 }
 
-/* Containers */
+/* Game */
 .game {
     width: 95vw;
     height: 98vh;
@@ -42,39 +42,72 @@ input {
 .players, .dealer {
     display: flex;
     flex-direction: row;
-    justify-content: space-around;
     align-items: center;
-    width: 90%;
-    height: 40%;
+    width: 100%;
 }
 
 .dealer {
-    height: 40%;
+    height: 35%;
+    justify-content: space-around;
 }
 
 .players {
-    height: 50%;
+    height: 55%;
+    justify-content: space-between;
 }
 
+/* Hand */
 .hand {
     display: flex;
     flex-direction: column;
+    justify-content: flex-start;
     align-items: center;
-    gap: 0;
     height: 100%;
     width: 45%;
 }
 
+.hand h1{
+    margin: calc(0.5 * var(--margin-base));
+    padding: calc(0.25 * var(--padding-base));
+    border-radius: calc(0.25 * var(--font-size-base));
+    font-size: var(--font-size-base);
+}
+
+/* Cards */
+/* Cards */
 .cards {
     display: flex;
     flex-direction: row;
     justify-content: flex-start;
-    align-items: start;
+    align-items: center;
+    flex-wrap: nowrap; /* Ensure no wrapping (change to 'wrap' if wrapping is desired) */
     gap: calc(0.5 * var(--margin-base));
-    height: 50%;
     width: 100%;
+    overflow: hidden; /* Prevent overflow from .cards */
 }
 
+.dealer .hand .cards {
+    height: 78.5%; /* Height relative to parent container */
+}
+
+.players .hand .cards {
+    height: 50%; /* Height relative to parent container */
+}
+
+.card {
+    margin: calc(0.5 * var(--margin-base)) 0;
+    max-height: 90%; /* Limit height relative to .cards */
+    flex: 1 1 calc(20% - calc(0.5 * var(--margin-base))); /* Allow each card to shrink/grow and fit dynamically */
+    max-width: calc(20% - calc(0.5 * var(--margin-base))); /* Same as flex-basis */
+    transition: margin-bottom 0.5s ease, margin-top 0.5s ease;
+}
+
+.card:hover {
+    margin-top: 0;
+    margin-bottom: calc(1 * var(--margin-base));
+}
+
+/* Chips */
 .chips {
     border: var(--padding-base) solid var(--secondary-color);
     border-radius: calc(0.2 * var(--font-size-base));
@@ -84,13 +117,23 @@ input {
     width: min-content;
 }
 
-.hand h1{
-    margin: calc(0.5 * var(--margin-base));
-    padding: calc(0.2 * var(--padding-base));
-    border-radius: calc(0.2 * var(--font-size-base));
-    font-size: var(--font-size-base);
+.chips img,
+.chips p {
+    background-color: var(--secondary-color);
+    height: 100%;
+    display: flex;
+    align-items: center;
 }
 
+.chips p {
+    border-radius: calc(0.2 * var(--font-size-base));
+    padding: var(--padding-base);
+    color: var(--primary-color);
+    font-size: var(--font-size-base);
+    font-weight: bolder;
+}
+
+/* Controls */
 .controls {
     display: flex;
     flex-direction: row;
@@ -104,14 +147,6 @@ input {
     display: inline-block;
 }
 
-.description {
-    width: 100%;
-    text-align: center;
-    font-size: calc(1.2 * var(--font-size-base));
-    margin-top: calc(2 * var(--margin-base));
-}
-
-/* Controls */
 button {
     margin: calc(0.2 * var(--margin-base)) var(--margin-base);
     border: 2px solid var(--primary-color);
@@ -159,37 +194,16 @@ input:focus {
 
 .error {
     color: var(--error-color);
-    font-size: calc(0.75 * var(--font-size-base));
+    font-size: calc(0.7 * var(--font-size-base));
     text-align: right;
-    min-height: calc(1 * var(--font-size-base));
+    min-height: var(--font-size-base);
     visibility: visible;
 }
 
-/* Cards */
-.card {
-    margin: calc(0.5 * var(--margin-base)) 0;
-    height: 90%;
-    transition: margin-bottom 0.5s ease, margin-top 0.5s ease;
-}
-
-.card:hover {
-    margin-top: 0;
-    margin-bottom: calc(1 * var(--margin-base));
-}
-
-/* Chips */
-.chips img,
-.chips p {
-    background-color: var(--secondary-color);
-    height: 100%;
-    display: flex;
-    align-items: center;
-}
-
-.chips p {
-    border-radius: calc(0.2 * var(--font-size-base));
-    padding: var(--padding-base);
-    color: var(--primary-color);
-    font-size: var(--font-size-base);
-    font-weight: bolder;
+/* Description */
+.description {
+    width: 100%;
+    text-align: center;
+    font-size: calc(1.2 * var(--font-size-base));
+    margin-top: calc(2 * var(--margin-base));
 }
