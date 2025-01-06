@@ -150,9 +150,9 @@ export default function App() {
   }
 
   function performDealerAction() {
-    if (dealerHand.value < 16) { // Hit until 16 or higher
+    if (dealerHand.value < 17) { // Hit until 17 or higher
       hit(dealerHand, setDealerHand);
-    } else { // value >= 16, end turn
+    } else { // value >= 17, end turn
       setDealerTurn(false);
       scoreRound();
     }
@@ -400,7 +400,7 @@ export default function App() {
           <li>Shoe is {SHOE_SIZE} decks</li>
           <li>Shoe gets reset at {SHOE_MIN_CAPACITY * 100}% capacity</li>
           <li>Blackjack pays 1:1</li>
-          <li>Dealer stays at 16 or higher</li>
+          <li>Dealer stays at 17 or higher</li>
         </ul>
         <h1>About</h1>
         <p>The agent is a monte-carlo rewarded statistical model, it was trained over 250000 episodes and achieves a winrate of <strong>43.3%</strong>.
